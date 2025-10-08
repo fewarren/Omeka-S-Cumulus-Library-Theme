@@ -6,22 +6,11 @@ use Laminas\View\Helper\AbstractHelper;
 
 class ThemeFunctions extends AbstractHelper
 {
-    /**
-     * Allow the helper to be invoked as a function and retrieve the helper instance.
-     *
-     * @return self The helper instance.
-     */
     public function __invoke()
     {
         return $this;
     }
 
-    /**
-     * Return the CSS `font-family` string mapped to a given font key.
-     *
-     * @param string|null $fontKey The font identifier used to look up a font-family. If empty or not present in the internal map, a default system font stack is used.
-     * @return string The CSS `font-family` value for the provided key; falls back to the system font stack when the key is empty or unrecognized.
-     */
     public function getFontFamily($fontKey)
     {
         // Trace for debugging in Apache logs
@@ -55,6 +44,9 @@ class ThemeFunctions extends AbstractHelper
             'lora' => 'Lora, Georgia, serif',
             'pt_serif' => 'PT Serif, Georgia, serif',
             'source_serif' => 'Source Serif Pro, Georgia, serif',
+            'cormorant' => 'Cormorant Garamond, Georgia, serif',
+            'cormorant_sc' => '"Cormorant SC", Georgia, serif',
+            'cormorant_infant' => '"Cormorant Infant", Georgia, serif',
             'georgia' => 'Georgia, serif',
             'times' => 'Times New Roman, serif',
 

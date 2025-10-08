@@ -1,6 +1,6 @@
 # Library Theme (Omeka S)
 
-A production-focused Omeka S theme tailored to the Library’s design system, with flexible typography, unified colors/shape, and clean, minimal runtime assets. Cormorant Garamond support is included.
+A production-focused Omeka S theme tailored to the Library’s design system, with flexible typography, unified colors/shape, and clean, minimal runtime assets. Cormorant Garamond support is included. This theme builds on the excellent work of Daniel Berthereau who created the Cumulus theme which provided the starting point. The theme intent is to provide extremely customizable elements like type styles, colors, hover aestics, etc. It also provides enhanced media item thumbnail operation and two alternate styles.  The styles can be saved and restored using the companion module, LibraryThemeStyles.
 
 - Omeka S compatibility: ^4.1.0
 - Zero build required: no npm install, no bundling
