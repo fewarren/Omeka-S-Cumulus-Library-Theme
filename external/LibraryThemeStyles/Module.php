@@ -9,18 +9,32 @@ use Laminas\View\Model\ViewModel;
 
 class Module extends AbstractModule
 {
+    /**
+     * Load and return the module configuration.
+     *
+     * @return array The module's configuration array as defined in config/module.config.php.
+     */
     public function getConfig(): array
     {
         return include __DIR__ . '/config/module.config.php';
     }
 
-    // Explicitly mark module configurable to ensure Configure link appears
+    /**
+     * Indicates the module exposes a configuration user interface.
+     *
+     * @return bool `true` if the module should be marked configurable and a Configure link shown, `false` otherwise.
+     */
     public function isConfigurable(): bool
     {
         return true;
     }
 
-    // Expose a Configure button in Modules list and render our admin form
+    /**
+     * Render the module's admin configuration form as an HTML fragment.
+     *
+     * @param PhpRenderer $renderer The view renderer used to render the configuration template.
+     * @return string The rendered HTML fragment for the Configure page.
+     */
     public function getConfigForm(PhpRenderer $renderer)
     {
         // Render a fragment that Omeka wraps in its own form with CSRF token
@@ -29,7 +43,15 @@ class Module extends AbstractModule
         return $renderer->render($view);
     }
 
-    // Handle form submission from the module's Configure page (Omeka signature)
+    /**
+     * Process POST data from the module's Configure page.
+     *
+     * Collects form input from the controller request and returns whether the submission
+     * was handled successfully.
+     *
+     * @param AbstractController $controller The controller handling the request.
+     * @return bool `true` if the configuration submission was processed successfully, `false` otherwise.
+     */
     public function handleConfigForm(AbstractController $controller): bool
     {
         $services = $controller->getEvent()->getApplication()->getServiceManager();
@@ -42,4 +64,3 @@ class Module extends AbstractModule
         return $moduleConfigService->handleConfigFormSubmission($data, $messenger);
     }
 }
-

@@ -65,11 +65,11 @@ class PresetManager
     }
 
     /**
-     * Get a specific preset by name
-     * 
-     * @param string $presetName Name of the preset to retrieve
-     * @return array Preset values
-     * @throws \InvalidArgumentException If preset doesn't exist
+     * Retrieve a theme preset configuration by name.
+     *
+     * @param string $presetName The name of the preset to retrieve.
+     * @return array The preset configuration array.
+     * @throws \InvalidArgumentException If no preset exists with the given name.
      */
     public function getPreset(string $presetName): array
     {
@@ -81,9 +81,9 @@ class PresetManager
     }
 
     /**
-     * Get list of available preset names
-     * 
-     * @return array List of preset names
+     * Return the names of all configured presets.
+     *
+     * @return string[] The list of available preset names.
      */
     public function getAvailablePresets(): array
     {
@@ -91,10 +91,10 @@ class PresetManager
     }
 
     /**
-     * Check if a preset exists
-     * 
-     * @param string $presetName Name of the preset to check
-     * @return bool True if preset exists, false otherwise
+     * Determine whether a preset with the given name is available.
+     *
+     * @param string $presetName The preset identifier to check.
+     * @return bool `true` if a preset with the given name exists, `false` otherwise.
      */
     public function hasPreset(string $presetName): bool
     {
