@@ -1,0 +1,18 @@
+<?php
+/**
+ * Media viewer block: render the media through its renderer.
+ * Compatible with viewer modules (e.g., Video Thumbnails) because it calls $media->render().
+ */
+
+$escape = $this->plugin('escapeHtml');
+
+// On media pages, $resource is expected to be a MediaRepresentation.
+$media = isset($resource) ? $resource : (isset($media) ? $media : null);
+
+if ($media && method_exists($media, 'render')) {
+    echo "\n<!-- DEBUG LT media-render.phtml: rendering media->render() -->\n";
+    echo $media->render();
+} else {
+    echo "\n<!-- DEBUG LT media-render.phtml: no media->render available -->\n";
+}
+

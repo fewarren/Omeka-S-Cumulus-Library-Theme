@@ -78,11 +78,11 @@ class ModuleConfig
     
     // Default Values
     public const DEFAULTS = [
-        'tagline_font_size' => '1.2',
+        'tagline_font_size' => '1.2rem',
         'logo_height' => '100',
         'header_height' => '100',
         'pagination_font_size' => '1rem',
-        'footer_copyright_text' => '© ' . date('Y') . ' The Library. All rights reserved.',
+        'footer_copyright_text' => '© 2024 The Library. All rights reserved.',
         'footer_powered_by_text' => 'Powered by Omeka S',
     ];
     
@@ -128,10 +128,10 @@ class ModuleConfig
     ];
     
     /**
-     * Builds the storage key for theme settings for the given theme slug.
+     * Build the full option key used to store or retrieve theme settings for a given theme slug.
      *
-     * @param string $themeSlug The theme slug identifier.
-     * @return string The composed theme settings key.
+     * @param string $themeSlug The theme slug to embed in the settings key.
+     * @return string The theme settings key formed by prefixing the provided slug.
      */
     public static function getThemeSettingsKey(string $themeSlug): string
     {
@@ -139,10 +139,10 @@ class ModuleConfig
     }
     
     /**
-     * Builds the storage key used to save defaults for a given preset.
+     * Build the storage key used to store defaults for the given preset.
      *
-     * @param string $preset The preset identifier (e.g., 'modern').
-     * @return string The storage key for the preset defaults.
+     * @param string $preset The preset name (e.g., one of AVAILABLE_PRESETS).
+     * @return string The defaults storage key for the specified preset.
      */
     public static function getDefaultsKey(string $preset): string
     {
@@ -150,7 +150,7 @@ class ModuleConfig
     }
     
     /**
-     * Checks whether a preset name is one of the available presets.
+     * Determine whether a preset name exists in the list of available presets.
      *
      * @param string $preset The preset name to check.
      * @return bool `true` if the preset exists in AVAILABLE_PRESETS, `false` otherwise.
@@ -161,11 +161,11 @@ class ModuleConfig
     }
     
     /**
-     * Retrieve a formatted error message template by key.
+     * Retrieve an error message template by key and format it with the provided arguments.
      *
-     * @param string $key The error message identifier to look up.
-     * @param mixed ...$args Values to interpolate into the message template via `sprintf`.
-     * @return string The formatted error message; returns `'Unknown error'` if no template is found for the provided key.
+     * @param string $key The error message key.
+     * @param mixed ...$args Values to interpolate into the message template.
+     * @return string The formatted error message; `'Unknown error'` if the key is not found.
      */
     public static function getErrorMessage(string $key, ...$args): string
     {
@@ -174,37 +174,37 @@ class ModuleConfig
     }
     
     /**
-     * Retrieve and format a success message template identified by key.
-     *
-     * @param string $key The message key to look up in SUCCESS_MESSAGES.
-     * @param mixed ...$args Values to interpolate into the message template.
-     * @return string The formatted success message; if the key is missing returns "Operation completed".
-     */
+         * Retrieve a success message template by key and format it with supplied arguments.
+         *
+         * @param string $key The key identifying the success message template.
+         * @param mixed ...$args Values to substitute into the template using `sprintf` placeholders.
+         * @return string The formatted success message for the given key, or 'Operation completed' if the key is not found.
+         */
     public static function getSuccessMessage(string $key, ...$args): string
     {
         $message = self::SUCCESS_MESSAGES[$key] ?? 'Operation completed';
         return sprintf($message, ...$args);
     }
     
-    /**
-         * Checks whether a color string matches the module's configured color pattern.
-         *
-         * @param string $color The color value to validate (must conform to the module's color pattern).
-         * @return bool `true` if the color matches the configured pattern, `false` otherwise.
-         */
+    /****
+     * Check whether a color string matches the module's configured color pattern.
+     *
+     * @param string $color The color string to validate (e.g., hex, rgb).
+     * @return bool `true` if the color matches the configured color pattern, `false` otherwise.
+     */
     public static function isValidColor(string $color): bool
     {
         return preg_match(self::VALIDATION_RULES['color_pattern'], $color) === 1;
     }
     
     /**
-     * Determine whether a font size string matches the configured font-size pattern.
-     *
-     * Accepts numeric values with optional units commonly used in CSS (for example "14px", "1.2rem", "100%").
-     *
-     * @param string $fontSize The font size string to validate.
-     * @return bool `true` if `$fontSize` matches the module's font-size pattern, `false` otherwise.
-     */
+         * Determine whether a font-size string matches the module's allowed format.
+         *
+         * The allowed format is a numeric value optionally followed by a CSS unit (for example `1.2rem` or `16px`).
+         *
+         * @param string $fontSize The font-size string to validate.
+         * @return bool `true` if `$fontSize` matches the configured font-size pattern, `false` otherwise.
+         */
     public static function isValidFontSize(string $fontSize): bool
     {
         return preg_match(self::VALIDATION_RULES['font_size_pattern'], $fontSize) === 1;

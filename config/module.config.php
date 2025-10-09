@@ -1,5 +1,18 @@
 <?php
 return [
+    'service_manager' => [
+        'factories' => [
+            \LibraryThemeStyles\Service\ErrorHandler::class => \LibraryThemeStyles\Service\ErrorHandlerFactory::class,
+            \LibraryThemeStyles\Service\ThemeSettingsService::class => \LibraryThemeStyles\Service\ThemeSettingsServiceFactory::class,
+            \LibraryThemeStyles\Service\ModuleConfigService::class => \LibraryThemeStyles\Service\ModuleConfigServiceFactory::class,
+            \LibraryThemeStyles\Service\PresetManager::class => \LibraryThemeStyles\Service\PresetManagerFactory::class,
+        ],
+    ],
+    'controllers' => [
+        'factories' => [
+            \LibraryThemeStyles\Controller\AdminController::class => \LibraryThemeStyles\Service\AdminControllerFactory::class,
+        ],
+    ],
     'view_manager' => [
         'template_path_stack' => [
             dirname(__DIR__) . '/view',

@@ -15,11 +15,9 @@ class ErrorHandler
     private LoggerInterface $logger;
     
     /**
-     * Initialize the error handler with an optional PSR-3 logger.
+     * Initializes the error handler with a logger instance.
      *
-     * If no logger is provided, a NullLogger is used.
-     *
-     * @param LoggerInterface|null $logger Optional PSR-3 logger to receive error and audit messages.
+     * If no logger is provided, a NullLogger is used as the default to ensure logging calls are safe.
      */
     public function __construct(?LoggerInterface $logger = null)
     {
@@ -27,18 +25,25 @@ class ErrorHandler
     }
     
     /**
-     * Handle an exception by logging detailed error information and returning a user-facing message.
+     * Handle an exception by logging detailed error information and producing a user-facing message.
      *
-     * The method logs an error-level entry containing the exception, generated error ID, file, line and stack trace,
-     * then returns a message suitable for display to end users which includes the reference error ID for support.
+     * The method logs the exception along with a generated error identifier and optional context,
+     * and returns a concise message suitable for presenting to end users which includes the error ID.
      *
-     * @param \Throwable $exception The exception to handle.
-     * @param string $context Optional contextual label (operation, component, or request id) to include in logs.
-     * @return string A user-facing error message that includes a reference error ID. 
+     * @param \Throwable $exception The exception to handle and log.
+     * @param string $context Optional context string appended to the log entry to aid troubleshooting.
+     * @return string The user-facing error message that includes the generated error ID.
      */
     public function handleException(\Throwable $exception, string $context = ''): string
     {
-        $errorId = uniqid('lts_error_');
+        // Generate cryptographically secure error ID with fallback
+        try {
+            $errorId = 'lts_error_' . bin2hex(random_bytes(16));
+        } catch (\Exception $e) {
+            // Fallback to uniqid if secure generation fails
+            $errorId = uniqid('lts_error_');
+        }
+
         $contextInfo = $context ? " (Context: {$context})" : '';
         
         // Log the full exception details
@@ -59,10 +64,9 @@ class ErrorHandler
     }
     
     /**
-     * Validates a preset name and returns an error message when the preset is invalid.
+     * Validate a preset name and return an error message when it is invalid.
      *
-     * @param string $preset The preset name to validate.
-     * @return string|null An error message describing the invalid preset if validation fails, `null` otherwise.
+     * @return string|null An error message when the preset is invalid, `null` otherwise.
      */
     public function validatePreset(string $preset): ?string
     {
@@ -75,11 +79,11 @@ class ErrorHandler
     }
     
     /**
-     * Validate the provided site slug and return a module-specific error message when a required slug is missing.
+     * Validate a site slug and produce an error message when a required slug is missing.
      *
-     * @param string|null $siteSlug The site identifier slug to validate; may be null or empty.
-     * @param bool $required When true, an empty or null `$siteSlug` is considered invalid.
-     * @return string|null A module-specific error message if validation fails, or `null` when the slug is accepted.
+     * @param string|null $siteSlug The site slug to validate.
+     * @param bool $required Whether a non-empty site slug is required (defaults to true).
+     * @return string|null An error message when the slug is required but missing, or `null` if no error.
      */
     public function validateSiteSlug(?string $siteSlug, bool $required = true): ?string
     {
@@ -92,14 +96,13 @@ class ErrorHandler
     }
     
     /**
-     * Validate theme settings and report any format or type violations.
+     * Validate theme settings and return any validation error messages.
      *
-     * Validates that each setting value is a string. Keys containing `_color` are
-     * checked for valid color format and keys containing `_font_size` are checked
-     * for valid font-size format.
+     * Checks that each setting value is a string; validates keys containing `_color` as colors
+     * and keys containing `_font_size` as font sizes. Logs a warning if any errors are found.
      *
-     * @param array $settings Associative array of theme settings (key => value). Keys with `_color` or `_font_size` receive additional format validation.
-     * @return string[] An array of error messages describing each invalid setting; empty if all settings are valid.
+     * @param array<string,mixed> $settings Associative map of setting keys to values to validate.
+     * @return string[] An array of validation error messages (empty if all settings are valid).
      */
     public function validateThemeSettings(array $settings): array
     {
@@ -130,11 +133,11 @@ class ErrorHandler
     }
     
     /**
-     * Create a user-facing API error message for an exception that occurred during an operation.
+     * Log an API-related exception and produce a module-specific error message.
      *
-     * @param \Throwable $exception The caught exception.
-     * @param string $operation A short identifier or description of the operation where the error occurred.
-     * @return string The module-specific API error message that includes the exception message.
+     * @param \Throwable $exception The caught exception from the API operation.
+     * @param string $operation A short identifier or description of the API operation that failed.
+     * @return string A module-specific error message for API failures that includes the exception message.
      */
     public function handleApiError(\Throwable $exception, string $operation): string
     {
@@ -150,12 +153,10 @@ class ErrorHandler
     }
     
     /**
-     * Record a successful operation to the logger for auditing.
+     * Record a successful operation to the logger with optional contextual data.
      *
-     * Logs an informational entry that includes the operation name and optional contextual data.
-     *
-     * @param string $operation The name or short description of the successful operation.
-     * @param array $context Optional key-value pairs with additional context to include in the log.
+     * @param string $operation The name or description of the operation that succeeded.
+     * @param array $context Optional additional context to include in the log entry.
      */
     public function logSuccess(string $operation, array $context = []): void
     {
@@ -163,14 +164,15 @@ class ErrorHandler
     }
     
     /**
-     * Builds a user-facing error message tailored to the given exception and includes the error identifier.
-     *
-     * The returned message is suitable for displaying to end users and always contains the provided error ID.
-     *
-     * @param \Throwable $exception The exception to generate a message from.
-     * @param string $errorId A unique error identifier to append to the message.
-     * @return string The user-facing message including the error ID.
-     */
+         * Produce a user-facing error message tailored to the given exception.
+         *
+         * The message is adjusted for specific exception types or content and always
+         * includes the provided error ID appended in parentheses.
+         *
+         * @param \Throwable $exception The exception to derive the message from.
+         * @param string $errorId The error identifier to append to the returned message.
+         * @return string The composed user-facing message including the error ID.
+         */
     private function getUserFriendlyMessage(\Throwable $exception, string $errorId): string
     {
         $baseMessage = "An error occurred while processing your request.";
@@ -188,18 +190,19 @@ class ErrorHandler
     }
     
     /**
-     * Execute a callable and return a standardized response array.
+     * Execute a callable with centralized error handling and return a standardized result payload.
      *
-     * Executes the provided operation. On success returns a response containing the operation result;
-     * on exception logs the error and returns a response containing a user-facing error message.
+     * If the operation completes successfully the payload contains the returned value; if an exception is thrown
+     * the exception is handled centrally and an error message is returned. When a non-empty $context is provided
+     * a success entry is logged on successful execution.
      *
      * @param callable $operation The operation to execute.
-     * @param string $context Optional context label used when logging success or errors.
+     * @param string $context Optional context label used in logging and error reporting.
      * @return array{
      *     success: bool,
      *     data: mixed|null,
      *     error: string|null
-     * } A standardized response where `success` indicates outcome, `data` holds the result on success or `null` on failure, and `error` holds a user-facing error message or `null`.
+     * } An associative array where `success` indicates operation outcome, `data` holds the operation result on success (or null on failure), and `error` holds a user-facing error message on failure (or null on success).
      */
     public function wrapOperation(callable $operation, string $context = ''): array
     {
@@ -220,16 +223,16 @@ class ErrorHandler
     }
     
     /**
-     * Builds a standardized error response array for API consumers.
-     *
-     * @param string $message The error message to include in the response.
-     * @param array $details Additional contextual details to include (optional).
-     * @return array The response array with keys:
-     *               - `success` (bool): false
-     *               - `error` (string): the provided message
-     *               - `details` (array): the provided details
-     *               - `timestamp` (string): current ISO-8601 timestamp
-     */
+         * Builds a standardized error response array for API consumers.
+         *
+         * @param string $message The human-readable error message to include.
+         * @param array $details Optional additional error details.
+         * @return array Associative array containing:
+         *               - `success` => false
+         *               - `error` => the provided message
+         *               - `details` => the provided details array
+         *               - `timestamp` => ISO 8601 formatted timestamp
+         */
     public function createErrorResponse(string $message, array $details = []): array
     {
         return [
@@ -241,15 +244,15 @@ class ErrorHandler
     }
     
     /**
-     * Builds a standardized success response array for API responses.
+     * Builds a standardized success response payload for API consumers.
      *
-     * @param mixed  $data    The payload to include in the response.
-     * @param string $message Optional human-readable message.
-     * @return array The response array with keys:
-     *               - 'success' => true
-     *               - 'data' => the provided payload
-     *               - 'message' => the provided message
-     *               - 'timestamp' => ISO 8601 formatted timestamp
+     * @param mixed $data The response payload to return under the `data` key.
+     * @param string $message Optional human-readable message describing the result.
+     * @return array An associative array with keys:
+     *               - `success` (bool): always true
+     *               - `data` (mixed): the provided payload
+     *               - `message` (string): the provided message
+     *               - `timestamp` (string): ISO 8601 formatted timestamp
      */
     public function createSuccessResponse($data, string $message = ''): array
     {

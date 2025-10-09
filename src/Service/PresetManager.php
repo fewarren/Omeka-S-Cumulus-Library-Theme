@@ -197,12 +197,12 @@ class PresetManager
     }
 
     /**
-     * Retrieve preset data for the given preset name.
-     *
-     * @param string $presetName Name of the preset to retrieve.
-     * @return array<string, string> Associative array mapping preset keys to string values.
-     * @throws \InvalidArgumentException If the specified preset does not exist.
-     */
+         * Retrieve a theme preset by its name.
+         *
+         * @param string $presetName The preset identifier.
+         * @return array<string, string> Map of preset keys to string values.
+         * @throws \InvalidArgumentException If the named preset does not exist.
+         */
     public static function getPreset(string $presetName): array
     {
         if (!isset(self::$presets[$presetName])) {
@@ -213,20 +213,20 @@ class PresetManager
     }
 
     /**
-         * Determine whether a preset with the given name is registered.
-         *
-         * @param string $presetName The preset identifier to check.
-         * @return bool `true` if a preset with the given name exists, `false` otherwise.
-         */
+     * Determine whether a preset with the given name is defined.
+     *
+     * @param string $presetName The preset identifier to check.
+     * @return bool `true` if the preset exists, `false` otherwise.
+     */
     public static function hasPreset(string $presetName): bool
     {
         return isset(self::$presets[$presetName]);
     }
 
     /**
-     * List all registered preset names.
+     * Get the list of available preset names.
      *
-     * @return array<string> The list of preset names.
+     * @return string[] The preset names present in the manager.
      */
     public static function getPresetNames(): array
     {
@@ -234,10 +234,10 @@ class PresetManager
     }
 
     /**
-     * Check that every key and value in a preset data array is a string.
+     * Determine whether the provided preset data is a map of string keys to string values.
      *
-     * @param array<string, string> $presetData Associative array representing a preset where keys and values must be strings.
-     * @return bool `true` if all keys and values are strings, `false` otherwise.
+     * @param array<string,string> $presetData Map of preset keys to their string values.
+     * @return bool `true` if every key and value in `$presetData` is a string, `false` otherwise.
      */
     public static function validatePresetData(array $presetData): bool
     {
