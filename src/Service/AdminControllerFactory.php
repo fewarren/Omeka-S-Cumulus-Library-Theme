@@ -13,6 +13,14 @@ use LibraryThemeStyles\Controller\AdminController;
  */
 class AdminControllerFactory implements FactoryInterface
 {
+    /**
+     * Create an AdminController populated with its required dependencies from the container.
+     *
+     * @param ContainerInterface $container The service container used to retrieve dependencies.
+     * @param string $requestedName The requested service name.
+     * @param array|null $options Optional creation options (not used).
+     * @return AdminController The constructed controller configured with API manager, error handler, and theme settings service.
+     */
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null): AdminController
     {
         $api = $container->get('Omeka\ApiManager');

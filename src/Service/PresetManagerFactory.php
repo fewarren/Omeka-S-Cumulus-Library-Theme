@@ -10,6 +10,11 @@ use Laminas\ServiceManager\Factory\FactoryInterface;
  */
 class PresetManagerFactory implements FactoryInterface
 {
+    /**
+     * Create and return a new PresetManager instance.
+     *
+     * @return PresetManager The created PresetManager instance.
+     */
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null): PresetManager
     {
         return new PresetManager();

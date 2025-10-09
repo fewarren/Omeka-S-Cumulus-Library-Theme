@@ -17,6 +17,20 @@ class PdfRenderer implements RendererInterface
         'embed_type' => 'iframe', // 'iframe' or 'object'
     ];
 
+    /**
+     * Render HTML for embedding a PDF using either an iframe or an object tag.
+     *
+     * Renders a container with configurable width and height that embeds the media's original URL
+     * as a PDF and includes a fallback link to download the PDF when embedding is not supported.
+     *
+     * @param PhpRenderer $view View renderer used for escaping and translations.
+     * @param MediaRepresentation $media Media representation providing the PDF URL and title/filename.
+     * @param array $options Rendering options; recognized keys:
+     *                       - string 'width'  Width CSS value for the container (default '100%').
+     *                       - string 'height' Height CSS value for the container (default '800px').
+     *                       - string 'embed_type' Either 'iframe' or 'object' to select the embedding element (default 'iframe').
+     * @return string HTML markup that embeds the PDF and includes fallback content with a download link.
+     */
     public function render(PhpRenderer $view, MediaRepresentation $media, array $options = [])
     {
         $options = array_merge(self::DEFAULT_OPTIONS, $options);
@@ -63,4 +77,3 @@ class PdfRenderer implements RendererInterface
         }
     }
 }
-

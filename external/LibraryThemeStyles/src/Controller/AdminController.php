@@ -16,11 +16,29 @@ class AdminController extends AbstractActionController
 {
     private ModuleConfigService $moduleConfigService;
 
+    /**
+     * Initialize the controller with its ModuleConfigService dependency.
+     *
+     * @param ModuleConfigService $moduleConfigService Service responsible for handling module configuration and admin form submissions.
+     */
     public function __construct(ModuleConfigService $moduleConfigService)
     {
         $this->moduleConfigService = $moduleConfigService;
     }
 
+    /**
+     * Handle the admin index action by processing configuration form submissions (if POST)
+     * and preparing data for the admin view.
+     *
+     * When a POST request is received, delegates form handling to ModuleConfigService and
+     * collects any success or error messages to expose to the view. Catches any throwable
+     * and surfaces its message as an error string.
+     *
+     * @return \Laminas\View\Model\ViewModel A view model with the keys:
+     *                                       - 'message' => string|null (concatenated success messages)
+     *                                       - 'error'   => string|null (concatenated error messages or exception message)
+     *                                       - 'siteSlug'=> string|null (site query parameter)
+     */
     public function indexAction()
     {
         $request = $this->getRequest();
@@ -63,4 +81,3 @@ class AdminController extends AbstractActionController
         ]);
     }
 }
-

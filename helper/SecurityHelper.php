@@ -10,17 +10,25 @@ use Laminas\View\Helper\AbstractHelper;
  */
 class SecurityHelper extends AbstractHelper
 {
+    /**
+     * Return the helper instance to allow the helper to be invoked as a function.
+     *
+     * @return self The helper instance.
+     */
     public function __invoke(): self
     {
         return $this;
     }
     
     /**
-     * Safely escape HTML content with additional security measures
-     * 
-     * @param string $content Content to escape
-     * @param bool $allowBasicTags Whether to allow basic HTML tags
-     * @return string Escaped content
+     * Escape HTML content and optionally preserve a small, safe subset of basic tags.
+     *
+     * When $allowBasicTags is true, a limited whitelist of tags is retained and
+     * dangerous attributes are removed before the content is escaped.
+     *
+     * @param string $content The content to sanitize and escape.
+     * @param bool $allowBasicTags Whether to retain a small, safe subset of basic HTML tags before escaping.
+     * @return string The sanitized and escaped content safe for output.
      */
     public function secureEscape($content, $allowBasicTags = false): string
     {
@@ -43,9 +51,12 @@ class SecurityHelper extends AbstractHelper
     }
     
     /**
-     * Generate secure CSRF token for forms
-     * 
-     * @return string CSRF token
+     * Generates and returns a CSRF token for the current session.
+     *
+     * Ensures a PHP session is started and stores a 32-byte random token
+     * (hex-encoded) in $_SESSION['csrf_token'] if none exists.
+     *
+     * @return string The CSRF token stored in the session.
      */
     public function getCsrfToken(): string
     {
@@ -60,11 +71,13 @@ class SecurityHelper extends AbstractHelper
     }
     
     /**
-     * Validate CSRF token
-     * 
-     * @param string $token Token to validate
-     * @return bool Whether token is valid
-     */
+         * Check whether a provided token matches the stored CSRF token.
+         *
+         * Ensures a PHP session is started, then compares the provided token against the value stored in $_SESSION['csrf_token'] using a timing-attack-resistant comparison.
+         *
+         * @param string $token The CSRF token to validate.
+         * @return bool `true` if the provided token matches the stored CSRF token, `false` otherwise.
+         */
     public function validateCsrfToken(string $token): bool
     {
         if (session_status() === PHP_SESSION_NONE) {
@@ -75,10 +88,10 @@ class SecurityHelper extends AbstractHelper
     }
     
     /**
-     * Generate secure random string for IDs
-     * 
-     * @param int $length Length of string
-     * @return string Random string
+     * Generate a cryptographically secure hex string of the given length.
+     *
+     * @param int $length Desired length in characters of the resulting hex string.
+     * @return string Hex-encoded string of the specified length composed of cryptographically secure random bytes.
      */
     public function generateSecureId(int $length = 16): string
     {
@@ -88,11 +101,14 @@ class SecurityHelper extends AbstractHelper
     }
     
     /**
-     * Sanitize URL for safe output
-     * 
-     * @param string $url URL to sanitize
-     * @return string Sanitized URL
-     */
+         * Return a URL sanitized for safe output.
+         *
+         * Strips leading dangerous protocols (`javascript:`, `data:`, `vbscript:`) and validates the result.
+         * If the sanitized value is neither a valid absolute URL nor a root-relative path, `'#'` is returned.
+         *
+         * @param string $url URL to sanitize
+         * @return string Sanitized URL; `'#'` if the input is invalid or unsafe
+         */
     public function sanitizeUrl(string $url): string
     {
         // Remove dangerous protocols
@@ -107,11 +123,11 @@ class SecurityHelper extends AbstractHelper
     }
     
     /**
-     * Get theme setting with security validation
-     * 
-     * @param string $setting Setting name
-     * @param mixed $default Default value
-     * @return mixed Setting value
+     * Retrieve a theme setting and strip embedded script/iframe/object/embed tags from string values.
+     *
+     * @param string $setting The theme setting name.
+     * @param mixed $default Value to return if the setting is not set.
+     * @return mixed The setting value; if a string, any occurrences of `<script`, `<iframe`, `<object`, or `<embed` (case-insensitive) are removed. 
      */
     public function getSecureThemeSetting(string $setting, $default = null)
     {
@@ -128,11 +144,18 @@ class SecurityHelper extends AbstractHelper
     }
     
     /**
-     * Validate and sanitize user input
-     * 
-     * @param string $input User input
-     * @param string $type Type of validation (email, url, text, etc.)
-     * @return string|false Sanitized input or false if invalid
+     * Validate and sanitize input according to the specified type.
+     *
+     * Supported $type values:
+     * - 'email'  : returns the email string if valid, `false` otherwise.
+     * - 'url'    : returns the URL string if valid, `false` otherwise.
+     * - 'int'    : returns the integer value if valid, `false` otherwise.
+     * - 'float'  : returns the float value if valid, `false` otherwise.
+     * - 'text'   : removes null bytes and control characters, then trims and returns the string.
+     *
+     * @param string $input The value to validate or sanitize.
+     * @param string $type  The validation type: 'email', 'url', 'int', 'float', or 'text'.
+     * @return string|int|float|false The validated or sanitized value on success; `false` if validation fails. 
      */
     public function validateInput(string $input, string $type = 'text')
     {
@@ -158,9 +181,12 @@ class SecurityHelper extends AbstractHelper
     }
     
     /**
-     * Generate Content Security Policy nonce
-     * 
-     * @return string CSP nonce
+     * Get the Content Security Policy (CSP) nonce for the current session.
+     *
+     * Ensures a PHP session is started and generates a base64-encoded 16-byte nonce
+     * stored in $_SESSION['csp_nonce'] if one does not already exist.
+     *
+     * @return string The base64-encoded 16-byte CSP nonce stored in the session.
      */
     public function generateCspNonce(): string
     {
@@ -176,9 +202,9 @@ class SecurityHelper extends AbstractHelper
     }
     
     /**
-     * Check if current request is HTTPS
-     * 
-     * @return bool Whether request is secure
+     * Determine whether the current HTTP request was made over HTTPS.
+     *
+     * @return bool `true` if the request is over HTTPS, `false` otherwise.
      */
     public function isSecureRequest(): bool
     {
@@ -188,13 +214,15 @@ class SecurityHelper extends AbstractHelper
     }
     
     /**
-     * Rate limiting check (basic implementation)
-     * 
-     * @param string $identifier Unique identifier (IP, user ID, etc.)
-     * @param int $maxRequests Maximum requests allowed
-     * @param int $timeWindow Time window in seconds
-     * @return bool Whether request is allowed
-     */
+         * Enforces a session-backed rate limit for a given identifier.
+         *
+         * Tracks requests in the PHP session and allows up to `$maxRequests` within a rolling `$timeWindow` (seconds); the count resets after the time window elapses.
+         *
+         * @param string $identifier Unique key to identify the requester (e.g., IP address or user ID).
+         * @param int $maxRequests Maximum allowed requests within the time window.
+         * @param int $timeWindow Time window in seconds used to count requests.
+         * @return bool `true` if the request is permitted under the limit, `false` otherwise.
+         */
     public function checkRateLimit(string $identifier, int $maxRequests = 60, int $timeWindow = 3600): bool
     {
         if (session_status() === PHP_SESSION_NONE) {
@@ -228,11 +256,14 @@ class SecurityHelper extends AbstractHelper
     }
     
     /**
-     * Log security event (basic implementation)
-     * 
-     * @param string $event Event description
-     * @param array $context Additional context
-     * @return void
+     * Record a security-related event with attached context and metadata.
+     *
+     * The entry includes a timestamp, client IP, user agent, the provided event string,
+     * and any additional context. The default implementation emits a JSON-encoded entry
+     * to PHP's error log.
+     *
+     * @param string $event Short event message or identifier.
+     * @param array $context Additional contextual data to include in the log entry.
      */
     public function logSecurityEvent(string $event, array $context = []): void
     {

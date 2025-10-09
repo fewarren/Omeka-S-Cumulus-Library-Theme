@@ -197,12 +197,12 @@ class PresetManager
     }
 
     /**
-     * Get a specific preset by name
-     * 
-     * @param string $presetName
-     * @return array<string, string>
-     * @throws \InvalidArgumentException if preset doesn't exist
-     */
+         * Retrieve a theme preset by its name.
+         *
+         * @param string $presetName The preset identifier.
+         * @return array<string, string> Map of preset keys to string values.
+         * @throws \InvalidArgumentException If the named preset does not exist.
+         */
     public static function getPreset(string $presetName): array
     {
         if (!isset(self::$presets[$presetName])) {
@@ -213,10 +213,10 @@ class PresetManager
     }
 
     /**
-     * Check if a preset exists
-     * 
-     * @param string $presetName
-     * @return bool
+     * Determine whether a preset with the given name is defined.
+     *
+     * @param string $presetName The preset identifier to check.
+     * @return bool `true` if the preset exists, `false` otherwise.
      */
     public static function hasPreset(string $presetName): bool
     {
@@ -224,9 +224,9 @@ class PresetManager
     }
 
     /**
-     * Get list of available preset names
-     * 
-     * @return array<string>
+     * Get the list of available preset names.
+     *
+     * @return string[] The preset names present in the manager.
      */
     public static function getPresetNames(): array
     {
@@ -234,10 +234,10 @@ class PresetManager
     }
 
     /**
-     * Validate preset data structure
-     * 
-     * @param array<string, string> $presetData
-     * @return bool
+     * Determine whether the provided preset data is a map of string keys to string values.
+     *
+     * @param array<string,string> $presetData Map of preset keys to their string values.
+     * @return bool `true` if every key and value in `$presetData` is a string, `false` otherwise.
      */
     public static function validatePresetData(array $presetData): bool
     {
