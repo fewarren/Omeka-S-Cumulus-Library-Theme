@@ -16,9 +16,11 @@ $this->headScript()->appendFile($this->assetUrl('js/lightbox.js'));
 
 $this->htmlElement('body')->appendAttribute('class', 'item resource show library-item-show reference-item');
 
+// Load item media for gallery rendering
+$itemMedia = $item->media();
+
 // Theme settings
 $embedMedia = $this->siteSetting('item_media_embed', false);
-$itemMedia = $item->media();
 $showLayout = $this->themeSetting('show_layout');
 $mediaDisplay = $this->themeSetting('media_display', 'topgallery');
 $metadataEmphasis = $this->themeSetting('library_metadata_emphasis', 'enhanced');
@@ -41,7 +43,8 @@ $itemTitle = $item->displayTitle(null, $valueLang);
 $itemDescription = $item->displayDescription();
 $creator = $item->value('dcterms:creator', ['lang' => $valueLang]);
 $date = $item->value('dcterms:date', ['lang' => $valueLang]);
-$subject = $item->values('dcterms:subject', ['lang' => $valueLang]);
+// Check if item has subject values
+$hasSubjects = (bool) $item->value('dcterms:subject');
 $rights = $item->value('dcterms:rights', ['lang' => $valueLang]);
 $itemSets = $item->itemSets();
 ?>
@@ -52,16 +55,22 @@ $itemSets = $item->itemSets();
         <div class="grid-x grid-margin-x">
             <div class="cell">
                 <!-- Breadcrumb Navigation -->
+                <?php
+                // Check theme setting for including current page in breadcrumbs
+                $includeCurrent = (string)($this->themeSetting('breadcrumbs_include_current', '1') ?? '1') === '1';
+                ?>
                 <nav class="breadcrumbs" aria-label="<?= $translate('Breadcrumb') ?>">
                     <ul>
                         <li><a href="<?= $this->url('site', [], true) ?>"><?= $translate('Home') ?></a></li>
-                        <li><a href="<?= $this->url('site/resource', ['controller' => 'item', 'action' => 'browse']) ?>"><?= $translate('Items') ?></a></li>
+                        <li><a href="<?= $this->url('site/resource', ['controller' => 'item', 'action' => 'browse'], true) ?>"><?= $translate('Items') ?></a></li>
                         <?php if (!empty($itemSets)): ?>
                             <?php foreach ($itemSets as $itemSet): ?>
                             <li><a href="<?= $escape($itemSet->url()) ?>"><?= $escape($itemSet->displayTitle()) ?></a></li>
                             <?php endforeach; ?>
                         <?php endif; ?>
+                        <?php if ($includeCurrent): ?>
                         <li class="current"><?= $escape($itemTitle) ?></li>
+                        <?php endif; ?>
                     </ul>
                 </nav>
 
@@ -88,16 +97,57 @@ $itemSets = $item->itemSets();
             <div class="main-media">
                 <?php $primaryMedia = $itemMedia[0]; ?>
                 <div class="media-container" data-media-id="<?= $primaryMedia->id() ?>">
-                    <?php if ($primaryMedia->hasOriginal()): ?>
-                    <a href="<?= $escape($primaryMedia->originalUrl()) ?>"
+                    <?php
+                    // Prefer item thumbnail, then media thumbnail, then auto-generated
+                    $preferredRep = $item->thumbnail() ? $item : $primaryMedia;
+                    // Render a scalable thumbnail image that obeys Omeka thumbnail sizes
+                    $img = $thumbnail($preferredRep, 'large', [
+                        'style' => 'width: 100%; height: auto; max-height: 600px; object-fit: contain;',
+                        'alt' => $item->thumbnailAltText(),
+                    ]);
+                    echo "\n<!-- DEBUG LT item/show.phtml main: preferredRep=" . (($preferredRep === $item) ? 'item' : 'media') . ", hasItemThumb=" . ($item->thumbnail() ? '1' : '0') . ", hasPrimaryMediaThumb=" . ($primaryMedia->thumbnail() ? '1' : '0') . ", mediaCount=" . count($itemMedia) . " -->\n";
+                    ?>
+                    <?php
+                        $mt = method_exists($primaryMedia, 'mediaType') ? (string) $primaryMedia->mediaType() : '';
+                        $isImage = (stripos($mt, 'image/') === 0);
+                        $isAudio = (stripos($mt, 'audio/') === 0);
+
+                        echo "\n<!-- DEBUG LT item/show.phtml MAIN: mediaType=" . $mt . ", isImage=" . ($isImage ? 'YES' : 'NO') . ", isAudio=" . ($isAudio ? 'YES' : 'NO') . " -->\n";
+
+                        if ($isImage && $primaryMedia->hasOriginal()) {
+                            $linkUrl = $primaryMedia->originalUrl();
+                            echo "\n<!-- DEBUG LT item/show.phtml MAIN: IMAGE → lightbox, linkUrl=" . $linkUrl . " -->\n";
+                    ?>
+                    <a href="<?= $escape($linkUrl) ?>"
                        class="lightbox-trigger"
                        data-lightbox="item-gallery"
                        data-title="<?= $escape($primaryMedia->displayTitle() ?: $itemTitle) ?>">
-                        <?= $primaryMedia->render(['style' => 'width: 100%; height: auto; max-height: 600px; object-fit: contain;']) ?>
+                        <?= $img ?>
                     </a>
-                    <?php else: ?>
-                        <?= $primaryMedia->render(['style' => 'width: 100%; height: auto; max-height: 600px; object-fit: contain;']) ?>
-                    <?php endif; ?>
+                    <?php } elseif ($isAudio && $primaryMedia->hasOriginal()) {
+                            echo "\n<!-- DEBUG LT item/show.phtml MAIN: AUDIO → inline player -->\n";
+                    ?>
+                    <div class="item-show-audio-container" style="margin-bottom: 20px;">
+                        <?= $img ?>
+                        <div class="audio-player-wrapper" style="margin-top: 10px;">
+                            <?php
+                            $hideDownloads = $this->themeSetting('hide_download_links', '0') === '1';
+                            $audioOptions = ['controls' => true, 'preload' => 'metadata'];
+                            if ($hideDownloads) {
+                                $audioOptions['controlsList'] = 'nodownload';
+                            }
+                            ?>
+                            <?= $primaryMedia->render($audioOptions) ?>
+                        </div>
+                    </div>
+                    <?php } else {
+                            $linkUrl = $primaryMedia->url();
+                            echo "\n<!-- DEBUG LT item/show.phtml MAIN: PDF/VIDEO/OTHER → media page, linkUrl=" . $linkUrl . " -->\n";
+                    ?>
+                    <a href="<?= $escape($linkUrl) ?>">
+                        <?= $img ?>
+                    </a>
+                    <?php } ?>
                 </div>
 
                 <?php if ($primaryMedia->displayTitle() || $primaryMedia->displayDescription()): ?>
@@ -119,16 +169,57 @@ $itemSets = $item->itemSets();
                     <?php foreach ($itemMedia as $index => $media): ?>
                     <div class="thumbnail-item <?= $index === 0 ? 'active' : '' ?>"
                          data-media-id="<?= $media->id() ?>">
-                        <?php if ($media->hasOriginal()): ?>
-                        <a href="<?= $escape($media->originalUrl()) ?>"
+                        <?php
+                        // Use item representation for first thumb if it has a custom thumbnail; otherwise the media itself
+                        $preferredRep = ($index === 0 && $item->thumbnail()) ? $item : $media;
+                        $thumbImg = $thumbnail($preferredRep, 'medium', [
+                            'class' => 'thumbnail-image',
+                            'style' => 'max-width: 100%; height: auto;',
+                            'alt' => $item->thumbnailAltText(),
+                        ]);
+                        echo "\n<!-- DEBUG LT item/show.phtml thumb #" . $index . ": preferredRep=" . (($preferredRep === $item) ? 'item' : 'media') . ", hasItemThumb=" . ($item->thumbnail() ? '1' : '0') . ", hasMediaThumb=" . ($media->thumbnail() ? '1' : '0') . " -->\n";
+                        ?>
+                        <?php
+                            $mt = method_exists($media, 'mediaType') ? (string) $media->mediaType() : '';
+                            $isImage = (stripos($mt, 'image/') === 0);
+                            $isAudio = (stripos($mt, 'audio/') === 0);
+
+                            echo "\n<!-- DEBUG LT item/show.phtml THUMB #" . $index . ": mediaType=" . $mt . ", isImage=" . ($isImage ? 'YES' : 'NO') . ", isAudio=" . ($isAudio ? 'YES' : 'NO') . " -->\n";
+
+                            if ($isImage && $media->hasOriginal()) {
+                                $thumbLinkUrl = $media->originalUrl();
+                                echo "\n<!-- DEBUG LT item/show.phtml THUMB #" . $index . ": IMAGE → lightbox, linkUrl=" . $thumbLinkUrl . " -->\n";
+                        ?>
+                        <a href="<?= $escape($thumbLinkUrl) ?>"
                            class="lightbox-trigger"
                            data-lightbox="item-gallery"
                            data-title="<?= $escape($media->displayTitle() ?: $itemTitle) ?>">
-                            <?= $thumbnail($media, 'medium') ?>
+                            <?= $thumbImg ?>
                         </a>
-                        <?php else: ?>
-                            <?= $thumbnail($media, 'medium') ?>
-                        <?php endif; ?>
+                        <?php } elseif ($isAudio && $media->hasOriginal()) {
+                                echo "\n<!-- DEBUG LT item/show.phtml THUMB #" . $index . ": AUDIO → inline player -->\n";
+                        ?>
+                        <div class="item-show-audio-thumb-container" style="margin-bottom: 10px;">
+                            <?= $thumbImg ?>
+                            <div class="audio-player-wrapper" style="margin-top: 5px;">
+                                <?php
+                                $hideDownloads = $this->themeSetting('hide_download_links', '0') === '1';
+                                $audioOptions = ['controls' => true, 'preload' => 'metadata'];
+                                if ($hideDownloads) {
+                                    $audioOptions['controlsList'] = 'nodownload';
+                                }
+                                ?>
+                                <?= $media->render($audioOptions) ?>
+                            </div>
+                        </div>
+                        <?php } else {
+                                $thumbLinkUrl = $media->url();
+                                echo "\n<!-- DEBUG LT item/show.phtml THUMB #" . $index . ": PDF/VIDEO/OTHER → media page, linkUrl=" . $thumbLinkUrl . " -->\n";
+                        ?>
+                        <a href="<?= $escape($thumbLinkUrl) ?>">
+                            <?= $thumbImg ?>
+                        </a>
+                        <?php } ?>
                     </div>
                     <?php endforeach; ?>
                 </div>
@@ -206,13 +297,22 @@ $itemSets = $item->itemSets();
                         </dl>
                     </div>
                     <?php endif; ?>
-                    <?php if (!empty($subject)): ?>
+                    <?php if ($hasSubjects): ?>
                     <div class="metadata-group">
                         <h4><?= $translate('Subjects') ?></h4>
                         <div class="subject-tags">
-                            <?php foreach ($subject as $subjectValue): ?>
-                            <span class="subject-tag"><?= $escape($subjectValue) ?></span>
-                            <?php endforeach; ?>
+                            <?php
+                            // Get all values for dcterms:subject and display as tags
+                            $allValues = $item->values();
+                            if (isset($allValues['dcterms:subject']['values']) && is_array($allValues['dcterms:subject']['values'])) {
+                                foreach ($allValues['dcterms:subject']['values'] as $subjectValue) {
+                                    // Ensure we have a valid Value object before calling methods
+                                    if (is_object($subjectValue) && method_exists($subjectValue, 'asHtml')) {
+                                        echo '<span class="subject-tag">' . $subjectValue->asHtml() . '</span>';
+                                    }
+                                }
+                            }
+                            ?>
                         </div>
                     </div>
                     <?php endif; ?>

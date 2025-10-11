@@ -74,9 +74,9 @@ $this->htmlElement('body')->appendAttribute('class', 'homepage library-homepage 
                         
                         <!-- Quick Access Links -->
                         <div class="hero-actions">
-                            <a href="<?php echo $url('site/resource', ['controller' => 'item', 'action' => 'browse']); ?>" 
+                            <a href="<?php echo $url('site/resource', ['controller' => 'item', 'action' => 'browse'], true); ?>"
                                class="button primary"><?php echo $translate('Browse Items'); ?></a>
-                            <a href="<?php echo $url('site/resource', ['controller' => 'item-set', 'action' => 'browse']); ?>" 
+                            <a href="<?php echo $url('site/resource', ['controller' => 'item-set', 'action' => 'browse'], true); ?>"
                                class="button secondary"><?php echo $translate('View Collections'); ?></a>
                         </div>
                     </div>
@@ -136,7 +136,7 @@ $this->htmlElement('body')->appendAttribute('class', 'homepage library-homepage 
             </div>
             
             <div class="section-footer text-center">
-                <a href="<?php echo $url('site/resource', ['controller' => 'item-set', 'action' => 'browse']); ?>" 
+                <a href="<?php echo $url('site/resource', ['controller' => 'item-set', 'action' => 'browse'], true); ?>"
                    class="button outline"><?php echo $translate('View All Collections'); ?></a>
             </div>
         </div>
@@ -185,7 +185,7 @@ $this->htmlElement('body')->appendAttribute('class', 'homepage library-homepage 
             </div>
             
             <div class="section-footer text-center">
-                <a href="<?php echo $url('site/resource', ['controller' => 'item', 'action' => 'browse']); ?>" 
+                <a href="<?php echo $url('site/resource', ['controller' => 'item', 'action' => 'browse'], true); ?>"
                    class="button outline"><?php echo $translate('Browse All Items'); ?></a>
             </div>
         </div>

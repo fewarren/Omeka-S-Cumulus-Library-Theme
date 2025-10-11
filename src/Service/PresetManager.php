@@ -76,7 +76,18 @@ class PresetManager
             // Page Title
             'page_title_pill_style' => '1',
             'page_title_border_width' => '1px',
-            
+
+            // PDF Viewer Settings
+            'pdf_viewer_height' => '800',
+            'pdf_viewer_border_style' => 'rounded',
+            'pdf_viewer_background' => '#f9f9f9',
+            'pdf_viewer_border_color' => '#dddddd',
+            'pdf_viewer_mobile_height' => '500',
+
+            // Media Download Controls
+            'hide_download_links' => '0',
+            'use_custom_pdfjs_viewer' => '0',
+
             // Pagination
             'pagination_font_color' => '#b37c05',
             'pagination_background_color' => '#f3d491',
@@ -145,6 +156,7 @@ class PresetManager
             'toc_border_width' => '2px',
             'toc_border_radius' => '8px',
             'toc_pill_style' => '1',
+            'toc_font_size_rem' => '',
             
             // Breadcrumbs
             'breadcrumbs_font_family' => 'helvetica',
@@ -163,7 +175,18 @@ class PresetManager
             // Page Title
             'page_title_pill_style' => '1',
             'page_title_border_width' => '1px',
-            
+
+            // PDF Viewer Settings
+            'pdf_viewer_height' => '800',
+            'pdf_viewer_border_style' => 'shadow',
+            'pdf_viewer_background' => '#ffffff',
+            'pdf_viewer_border_color' => '#7A1E3A',
+            'pdf_viewer_mobile_height' => '500',
+
+            // Media Download Controls
+            'hide_download_links' => '0',
+            'use_custom_pdfjs_viewer' => '0',
+
             // Pagination
             'pagination_font_color' => '#ffffff',
             'pagination_background_color' => '#1F3A5F',
@@ -197,12 +220,12 @@ class PresetManager
     }
 
     /**
-         * Retrieve a theme preset by its name.
-         *
-         * @param string $presetName The preset identifier.
-         * @return array<string, string> Map of preset keys to string values.
-         * @throws \InvalidArgumentException If the named preset does not exist.
-         */
+     * Get a specific preset by name
+     * 
+     * @param string $presetName
+     * @return array<string, string>
+     * @throws \InvalidArgumentException if preset doesn't exist
+     */
     public static function getPreset(string $presetName): array
     {
         if (!isset(self::$presets[$presetName])) {
@@ -213,10 +236,10 @@ class PresetManager
     }
 
     /**
-     * Determine whether a preset with the given name is defined.
-     *
-     * @param string $presetName The preset identifier to check.
-     * @return bool `true` if the preset exists, `false` otherwise.
+     * Check if a preset exists
+     * 
+     * @param string $presetName
+     * @return bool
      */
     public static function hasPreset(string $presetName): bool
     {
@@ -224,9 +247,9 @@ class PresetManager
     }
 
     /**
-     * Get the list of available preset names.
-     *
-     * @return string[] The preset names present in the manager.
+     * Get list of available preset names
+     * 
+     * @return array<string>
      */
     public static function getPresetNames(): array
     {
@@ -234,10 +257,10 @@ class PresetManager
     }
 
     /**
-     * Determine whether the provided preset data is a map of string keys to string values.
-     *
-     * @param array<string,string> $presetData Map of preset keys to their string values.
-     * @return bool `true` if every key and value in `$presetData` is a string, `false` otherwise.
+     * Validate preset data structure
+     * 
+     * @param array<string, string> $presetData
+     * @return bool
      */
     public static function validatePresetData(array $presetData): bool
     {

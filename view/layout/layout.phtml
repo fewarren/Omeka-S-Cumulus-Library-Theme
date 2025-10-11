@@ -655,10 +655,18 @@ $this->headLink()->appendStylesheet('https://fonts.googleapis.com/css2?family=Co
 <?php $submenuEnabled = ((string)$this->themeSetting('render_submenu_by_default', '0') === '1'); ?>
 <body class="<?php echo $submenuEnabled ? 'submenu-enabled' : 'submenu-disabled'; ?>">
     <?php
-    // User bar
+    // User bar - Only show in admin area, not on public pages
     try {
         $userIsAllowed = $this->userIsAllowed('Omeka\Entity\Site', 'update');
-        $showUserBar = $this->siteSetting('show_user_bar', 1) && $this->identity();
+        $isAdminArea = strpos($this->serverUrl(true), '/admin') !== false;
+        $showUserBar = $this->siteSetting('show_user_bar', 1) && $this->identity() && $isAdminArea;
+
+        // DEBUG: User bar visibility logic
+        echo "\n<!-- DEBUG USER BAR: show_user_bar setting=" . ($this->siteSetting('show_user_bar', 1) ? 'TRUE' : 'FALSE') .
+             ", identity=" . ($this->identity() ? 'LOGGED_IN' : 'NOT_LOGGED_IN') .
+             ", isAdminArea=" . ($isAdminArea ? 'TRUE' : 'FALSE') .
+             ", showUserBar=" . ($showUserBar ? 'TRUE' : 'FALSE') .
+             ", userIsAllowed=" . ($userIsAllowed ? 'TRUE' : 'FALSE') . " -->\n";
 
         if ($showUserBar): ?>
         <div id="user-bar">

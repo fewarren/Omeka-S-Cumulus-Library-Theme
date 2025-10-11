@@ -1360,6 +1360,52 @@ html body .block.block-videoThumbnail figcaption a {
     padding: 1rem 1.25rem !important;
 }
 
+/* =================================================================
+   PDF VIEWER STYLING FROM THEME SETTINGS
+   ================================================================= */
+
+<?php
+// Get PDF viewer settings
+$pdfViewerHeight = $this->themeSetting('pdf_viewer_height') ?: '800';
+$pdfViewerBorderStyle = $this->themeSetting('pdf_viewer_border_style') ?: 'rounded';
+$pdfViewerBackground = $this->themeSetting('pdf_viewer_background') ?: '#f9f9f9';
+$pdfViewerBorderColor = $this->themeSetting('pdf_viewer_border_color') ?: '#dddddd';
+$pdfViewerMobileHeight = $this->themeSetting('pdf_viewer_mobile_height') ?: '500';
+
+// Determine border styles based on setting
+$borderStyles = [
+    'none' => 'border: none !important; border-radius: 0 !important;',
+    'simple' => 'border: 1px solid ' . $pdfViewerBorderColor . ' !important; border-radius: 0 !important;',
+    'rounded' => 'border: 1px solid ' . $pdfViewerBorderColor . ' !important; border-radius: 8px !important;',
+    'shadow' => 'border: 1px solid ' . $pdfViewerBorderColor . ' !important; border-radius: 8px !important; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;'
+];
+$selectedBorderStyle = $borderStyles[$pdfViewerBorderStyle] ?? $borderStyles['rounded'];
+?>
+
+/* PDF Viewer Container - Theme Settings Applied */
+.pdf-viewer-container {
+    height: <?php echo $pdfViewerHeight; ?>px !important;
+    background: <?php echo $pdfViewerBackground; ?> !important;
+    <?php echo $selectedBorderStyle; ?>
+    margin-bottom: 20px !important;
+    overflow: hidden !important;
+}
+
+/* PDF Viewer Responsive - Mobile Height from Theme Settings */
+@media (max-width: 768px) {
+    .pdf-viewer-container {
+        height: <?php echo $pdfViewerMobileHeight; ?>px !important;
+        margin-bottom: 15px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .pdf-viewer-container {
+        height: <?php echo max(400, intval($pdfViewerMobileHeight) - 100); ?>px !important;
+        margin-bottom: 10px !important;
+    }
+}
+
 /* Keep raw .table-of-contents/.page-toc/.content-links minimal so pill links dominate */
 .table-of-contents, .page-toc, .content-links {
     background: transparent !important;

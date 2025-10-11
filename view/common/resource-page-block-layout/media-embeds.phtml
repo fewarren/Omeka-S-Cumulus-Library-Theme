@@ -51,7 +51,14 @@ $resourceMedia = $resource->media();
         <div class="media-embed-audio-container" style="margin-bottom: 20px;">
             <?= $img ?>
             <div class="audio-player-wrapper" style="margin-top: 10px;">
-                <?= $media->render(['controls' => true, 'preload' => 'metadata']) ?>
+                <?php
+                $hideDownloads = $this->themeSetting('hide_download_links', '0') === '1';
+                $audioOptions = ['controls' => true, 'preload' => 'metadata'];
+                if ($hideDownloads) {
+                    $audioOptions['controlsList'] = 'nodownload';
+                }
+                ?>
+                <?= $media->render($audioOptions) ?>
             </div>
         </div>
         <?php
