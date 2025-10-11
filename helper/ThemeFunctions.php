@@ -6,22 +6,11 @@ use Laminas\View\Helper\AbstractHelper;
 
 class ThemeFunctions extends AbstractHelper
 {
-    /**
-     * Expose the helper instance when the helper is called as a function.
-     *
-     * @return $this The current helper instance.
-     */
     public function __invoke()
     {
         return $this;
     }
 
-    /**
-     * Map a font key to the corresponding CSS `font-family` string.
-     *
-     * @param mixed $fontKey The font identifier key (e.g., "roboto", "georgia"). If empty or not present in the map, the system font stack is used.
-     * @return string The CSS `font-family` string for the given key; falls back to the system font stack when the key is empty or unrecognized.
-     */
     public function getFontFamily($fontKey)
     {
         // Trace for debugging in Apache logs

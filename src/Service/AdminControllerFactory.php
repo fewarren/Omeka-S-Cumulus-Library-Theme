@@ -8,25 +8,15 @@ use LibraryThemeStyles\Controller\AdminController;
 
 /**
  * Factory for AdminController
- * 
- * Properly injects dependencies without calling controller plugins in constructor
+ *
+ * Injects ModuleConfigService which contains all necessary business logic
  */
 class AdminControllerFactory implements FactoryInterface
 {
-    /**
-     * Create an AdminController populated with its required dependencies from the container.
-     *
-     * @param ContainerInterface $container The service container used to retrieve dependencies.
-     * @param string $requestedName The requested service name.
-     * @param array|null $options Optional creation options (not used).
-     * @return AdminController The constructed controller configured with API manager, error handler, and theme settings service.
-     */
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null): AdminController
     {
-        $api = $container->get('Omeka\ApiManager');
-        $errorHandler = $container->get(ErrorHandler::class);
-        $themeSettingsService = $container->get(ThemeSettingsService::class);
-        
-        return new AdminController($api, $errorHandler, $themeSettingsService);
+        $moduleConfigService = $container->get(ModuleConfigService::class);
+
+        return new AdminController($moduleConfigService);
     }
 }

@@ -73,8 +73,8 @@ $this->htmlElement('body')->appendAttribute('class', 'homepage library-homepage 
         <div class="sidebar-section">
             <h3><?php echo $translate('Browse'); ?></h3>
             <ul>
-                <li><a href="<?php echo $url('site/resource', ['controller' => 'item', 'action' => 'browse']); ?>"><?php echo $translate('All Items'); ?></a></li>
-                <li><a href="<?php echo $url('site/resource', ['controller' => 'item-set', 'action' => 'browse']); ?>"><?php echo $translate('Collections'); ?></a></li>
+                <li><a href="<?php echo $url('site/resource', ['controller' => 'item', 'action' => 'browse'], true); ?>"><?php echo $translate('All Items'); ?></a></li>
+                <li><a href="<?php echo $url('site/resource', ['controller' => 'item-set', 'action' => 'browse'], true); ?>"><?php echo $translate('Collections'); ?></a></li>
                 <li><a href="<?php echo $url('site/page', ['slug' => 'about']); ?>"><?php echo $translate('About'); ?></a></li>
             </ul>
         </div>

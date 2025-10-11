@@ -12,22 +12,18 @@ use Laminas\ServiceManager\Factory\FactoryInterface;
  */
 class ModuleConfigServiceFactory implements FactoryInterface
 {
-    /**
-     * Create and return a ModuleConfigService with dependencies retrieved from the container.
-     *
-     * @param ContainerInterface $container Service container used to resolve dependencies.
-     * @param string $requestedName The requested service name.
-     * @param array|null $options Optional factory options.
-     * @return ModuleConfigService The constructed ModuleConfigService instance.
-     */
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null): ModuleConfigService
     {
         $api = $container->get('Omeka\ApiManager');
         $settings = $container->get('Omeka\Settings');
         $siteSettings = $container->get('Omeka\Settings\Site');
         $themeSettingsService = $container->get(ThemeSettingsService::class);
+        $presetManager = $container->get(PresetManager::class);
         $errorHandler = $container->get(ErrorHandler::class);
-        
-        return new ModuleConfigService($api, $settings, $siteSettings, $themeSettingsService, $errorHandler);
+
+        // Get preset map from PresetManager
+        $presetMap = $presetManager->getAllPresets();
+
+        return new ModuleConfigService($api, $settings, $siteSettings, $themeSettingsService, $presetMap, $errorHandler);
     }
 }
