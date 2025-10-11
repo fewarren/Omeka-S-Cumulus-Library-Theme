@@ -4,19 +4,26 @@ namespace LibraryThemeStyles;
 
 use LibraryThemeStyles\Service\ModuleConfigService;
 use LibraryThemeStyles\Service\ThemeSettingsService;
-use LibraryThemeStyles\Service\PresetManager;
 
 return [
     'service_manager' => [
         'factories' => [
             ModuleConfigService::class => Service\ModuleConfigServiceFactory::class,
             ThemeSettingsService::class => Service\ThemeSettingsServiceFactory::class,
-            PresetManager::class => Service\PresetManagerFactory::class,
+            \LibraryThemeStyles\Service\ErrorHandler::class => function ($sm) {
+                return new \LibraryThemeStyles\Service\ErrorHandler();
+            },
         ],
     ],
     'controllers' => [
         'factories' => [
-            Controller\AdminController::class => Service\ControllerFactory::class,
+            Controller\AdminController::class => function ($sm) {
+                return new Controller\AdminController(
+                    $sm->get('Omeka\ApiManager'),
+                    $sm->get(\LibraryThemeStyles\Service\ErrorHandler::class),
+                    $sm->get(ThemeSettingsService::class)
+                );
+            },
         ],
     ],
     'router' => [

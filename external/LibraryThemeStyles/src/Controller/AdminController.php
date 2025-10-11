@@ -4,7 +4,9 @@ namespace LibraryThemeStyles\Controller;
 
 use Laminas\Mvc\Controller\AbstractActionController;
 use Laminas\View\Model\ViewModel;
-use LibraryThemeStyles\Service\ModuleConfigService;
+use Omeka\Api\Manager as ApiManager;
+use LibraryThemeStyles\Service\ErrorHandler;
+use LibraryThemeStyles\Service\ThemeSettingsService;
 
 /**
  * Admin controller for LibraryThemeStyles module
@@ -14,31 +16,20 @@ use LibraryThemeStyles\Service\ModuleConfigService;
  */
 class AdminController extends AbstractActionController
 {
-    private ModuleConfigService $moduleConfigService;
+    private ApiManager $api;
+    private ErrorHandler $errorHandler;
+    private ThemeSettingsService $themeSettingsService;
 
-    /**
-     * Initialize the controller with its ModuleConfigService dependency.
-     *
-     * @param ModuleConfigService $moduleConfigService Service responsible for handling module configuration and admin form submissions.
-     */
-    public function __construct(ModuleConfigService $moduleConfigService)
-    {
-        $this->moduleConfigService = $moduleConfigService;
+    public function __construct(
+        ApiManager $api,
+        ErrorHandler $errorHandler,
+        ThemeSettingsService $themeSettingsService
+    ) {
+        $this->api = $api;
+        $this->errorHandler = $errorHandler;
+        $this->themeSettingsService = $themeSettingsService;
     }
 
-    /**
-     * Handle the admin index action by processing configuration form submissions (if POST)
-     * and preparing data for the admin view.
-     *
-     * When a POST request is received, delegates form handling to ModuleConfigService and
-     * collects any success or error messages to expose to the view. Catches any throwable
-     * and surfaces its message as an error string.
-     *
-     * @return \Laminas\View\Model\ViewModel A view model with the keys:
-     *                                       - 'message' => string|null (concatenated success messages)
-     *                                       - 'error'   => string|null (concatenated error messages or exception message)
-     *                                       - 'siteSlug'=> string|null (site query parameter)
-     */
     public function indexAction()
     {
         $request = $this->getRequest();
@@ -49,29 +40,21 @@ class AdminController extends AbstractActionController
 
         try {
             if ($request->isPost()) {
-                // Collect form data
-                $data = [
-                    'action' => $this->params()->fromPost('action'),
-                    'target_preset' => $this->params()->fromPost('target_preset', 'modern'),
-                    'site' => $siteSlug,
-                    'debug' => false, // Admin interface doesn't need debug mode
-                ];
+                $action = $this->params()->fromPost('action');
+                $targetPreset = $this->params()->fromPost('target_preset', 'modern');
+                $themeKey = 'LibraryTheme';
 
-                // Delegate to ModuleConfigService for consistent handling
-                $messenger = $this->messenger();
-                $success = $this->moduleConfigService->handleConfigFormSubmission($data, $messenger);
+                // Handle form submission using injected services
+                $result = $this->handleFormAction($action, $siteSlug, $targetPreset, $themeKey);
 
-                // Extract messages from messenger
-                $messages = $messenger->getMessages();
-                if (!empty($messages['success'])) {
-                    $message = implode(' ', $messages['success']);
-                }
-                if (!empty($messages['error'])) {
-                    $error = implode(' ', $messages['error']);
+                if ($result['success']) {
+                    $message = $result['message'];
+                } else {
+                    $error = $result['error'];
                 }
             }
         } catch (\Throwable $e) {
-            $error = 'Error: ' . $e->getMessage();
+            $error = $this->errorHandler->handleException($e, 'AdminController form submission');
         }
 
         return new ViewModel([
@@ -80,4 +63,47 @@ class AdminController extends AbstractActionController
             'siteSlug' => $siteSlug,
         ]);
     }
+
+    /**
+     * Handle form action using injected services
+     */
+    private function handleFormAction(string $action, ?string $siteSlug, string $targetPreset, string $themeKey): array
+    {
+        try {
+            switch ($action) {
+                case 'apply_preset':
+                    $result = $this->themeSettingsService->applyPresetToThemeSettings($siteSlug, $themeKey, $targetPreset);
+                    return [
+                        'success' => true,
+                        'message' => "Applied {$targetPreset} preset: {$result[0]} settings updated."
+                    ];
+
+                case 'save_defaults':
+                    $result = $this->themeSettingsService->saveSettingsAsPresetDefaults($siteSlug, $themeKey, $targetPreset);
+                    return [
+                        'success' => true,
+                        'message' => "Saved {$result[0]} settings as {$targetPreset} defaults."
+                    ];
+
+                case 'load_defaults':
+                    $result = $this->themeSettingsService->loadStoredDefaults($siteSlug, $themeKey, $targetPreset);
+                    return [
+                        'success' => true,
+                        'message' => "Loaded {$result[0]} default settings for {$targetPreset}."
+                    ];
+
+                default:
+                    return [
+                        'success' => false,
+                        'error' => "Unknown action: {$action}"
+                    ];
+            }
+        } catch (\Throwable $e) {
+            return [
+                'success' => false,
+                'error' => $this->errorHandler->handleException($e, "Action: {$action}")
+            ];
+        }
+    }
 }
+
