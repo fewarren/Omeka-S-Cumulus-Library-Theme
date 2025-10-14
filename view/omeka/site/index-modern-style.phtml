@@ -58,7 +58,7 @@ $this->htmlElement('body')->appendAttribute('class', 'homepage library-homepage 
 <!-- Search Section (elegant) -->
 <section class="search-section">
     <div class="main-content">
-        <form class="search-form" action="<?php echo $url('site/resource', ['controller' => 'item', 'action' => 'browse'], true); ?>" method="get">
+        <form class="search-form" action="<?php echo $url('site/resource', ['controller' => 'item', 'action' => 'browse'], ['force_canonical' => true]); ?>" method="get">
             <input type="search" name="fulltext_search" placeholder="<?php echo $translate('Search the collection...'); ?>">
             <button type="submit" class="button"><?php echo $translate('Search'); ?></button>
         </form>

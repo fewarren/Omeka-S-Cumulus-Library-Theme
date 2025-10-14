@@ -3,7 +3,7 @@ $translate = $this->plugin('translate');
 $searchType = $this->siteSetting('search_type', 'sitewide');
 switch ($searchType) {
     case 'cross-site':
-        $searchAction = $this->url('site/cross-site-search', ['action' => 'results'], true);
+        $searchAction = $this->url('site/cross-site-search', ['action' => 'results'], ['force_canonical' => true]);
         break;
     case 'sitewide':
     default:

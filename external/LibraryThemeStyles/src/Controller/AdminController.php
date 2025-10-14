@@ -27,6 +27,13 @@ class AdminController extends AbstractActionController
         $siteSlug = $this->params()->fromQuery('site', null);
 
         if ($request->isPost()) {
+            // CSRF validation
+            $csrfValidator = $this->getPluginManager()->get('csrf');
+            if (!$csrfValidator->isValid()) {
+                $this->messenger()->addError('Invalid CSRF token. Please try again.');
+                return $this->redirect()->toRoute('admin/library-theme-styles', [], ['query' => ['site' => $siteSlug]]);
+            }
+
             // Collect all POST data for ModuleConfigService
             $data = $this->params()->fromPost();
             $data['site'] = $siteSlug; // Add site slug to data

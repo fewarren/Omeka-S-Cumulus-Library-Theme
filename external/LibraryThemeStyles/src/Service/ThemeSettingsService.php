@@ -45,8 +45,20 @@ class ThemeSettingsService
     {
         // Validate preset
         if (!\LibraryThemeStyles\Service\PresetManager::hasPreset($preset)) {
+            $this->errorHandler->logError('Unknown preset requested', [
+                'preset' => $preset,
+                'siteSlug' => $siteSlug,
+                'themeKey' => $themeKey,
+            ]);
             throw new \RuntimeException('Unknown preset: ' . $preset);
         }
+
+        $this->errorHandler->logInfo('Applying preset to theme settings', [
+            'preset' => $preset,
+            'siteSlug' => $siteSlug,
+            'themeKey' => $themeKey,
+        ]);
+
         $values = \LibraryThemeStyles\Service\PresetManager::getPreset($preset);
 
         // Resolve site and get appropriate settings instance
@@ -106,6 +118,12 @@ class ThemeSettingsService
      */
     public function saveSettingsAsPresetDefaults(?string $siteSlug, string $themeKey, string $preset): array
     {
+        $this->errorHandler->logInfo('Saving current settings as defaults', [
+            'siteSlug' => $siteSlug,
+            'themeKey' => $themeKey,
+            'preset' => $preset,
+        ]);
+
         // Resolve site and get appropriate settings instance
         $site = $this->resolveSite($siteSlug);
         $settingsInstance = $this->getSiteSettingsInstance($site);
@@ -117,12 +135,21 @@ class ThemeSettingsService
         $current = $this->getCurrentThemeSettings($themeSlug, $settingsInstance);
 
         if (!is_array($current) || empty($current)) {
+            $this->errorHandler->logWarning('No settings found to save as defaults', [
+                'siteSlug' => $siteSlug,
+                'themeSlug' => $themeSlug,
+            ]);
             return [0, []];
         }
 
         // Persist into global settings as JSON (per-preset)
         $defaultsKey = 'LibraryThemeStyles_defaults_' . $preset;
         $this->settings->set($defaultsKey, json_encode($current));
+
+        $this->errorHandler->logInfo('Settings saved as defaults successfully', [
+            'preset' => $preset,
+            'count' => count($current),
+        ]);
 
         return [count($current), $current];
     }
@@ -365,10 +392,21 @@ class ThemeSettingsService
         }
 
         try {
-            return $this->api->read('sites', ['slug' => $siteSlug])->getContent();
+            $response = $this->api->searchOne('sites', ['slug' => $siteSlug]);
+            $site = $response ? $response->getContent() : null;
+            if ($site) {
+                $this->errorHandler->logDebug('Site resolved successfully', [
+                    'siteSlug' => $siteSlug,
+                    'siteId' => $site->id(),
+                ]);
+                return $site;
+            }
         } catch (\Throwable $e) {
-            throw new \RuntimeException('Site not found: ' . $siteSlug);
+            $this->errorHandler->handleException($e, 'Error resolving site');
         }
+
+        $this->errorHandler->logError('Site not found', ['siteSlug' => $siteSlug]);
+        throw new \RuntimeException('Site not found: ' . $siteSlug);
     }
 
     /**
@@ -381,14 +419,32 @@ class ThemeSettingsService
      */
     private function getThemeSlug($site = null, ?string $themeKey = null, $settingsInstance = null): string
     {
+        // Validate themeKey if provided
+        if ($themeKey !== null && !$this->errorHandler->validateAndLog(
+            $themeKey,
+            fn($key) => is_string($key) && !empty($key),
+            'Invalid theme key provided'
+        )) {
+            $themeKey = null; // Fall back to default
+        }
+
         // First try to get theme from site
         if ($site && method_exists($site, 'theme') && $site->theme()) {
-            return (string) $site->theme();
+            $themeSlug = (string) $site->theme();
+            $this->errorHandler->logDebug('Theme slug resolved from site', [
+                'themeSlug' => $themeSlug,
+            ]);
+            return $themeSlug;
         }
 
         // If themeKey is provided and looks like a theme slug, use it
         if ($themeKey && $themeKey !== 'LibraryTheme') {
-            return strtolower(str_replace(' ', '-', $themeKey));
+            $themeSlug = strtolower(str_replace(' ', '-', $themeKey));
+            $this->errorHandler->logDebug('Theme slug resolved from themeKey', [
+                'themeKey' => $themeKey,
+                'themeSlug' => $themeSlug,
+            ]);
+            return $themeSlug;
         }
 
         // Try to get theme from settings (use provided instance or fall back to site settings)

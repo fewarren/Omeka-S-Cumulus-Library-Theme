@@ -151,7 +151,7 @@ $colors = $themeSetting('colors_rights');
         <button type="button" aria-label="<?php echo $translate('List'); ?>" class="tiny button list o-icon-list" <?php echo $listState; ?>></button>
     </div>
     <?php endif; ?>
-    <?php echo $this->hyperlink($translate('Advanced search'), $this->url('site/resource', ['controller' => 'item', 'action' => 'search'], ['query' => $query], true), ['class' => 'advanced-search']); ?>
+    <?php echo $this->hyperlink($translate('Advanced search'), $this->url('site/resource', ['controller' => 'item', 'action' => 'search'], ['query' => $query, 'force_canonical' => true]), ['class' => 'advanced-search']); ?>
     <?php echo $this->browse()->renderSortSelector('items'); ?>
 </div>
 <?php endif; ?>

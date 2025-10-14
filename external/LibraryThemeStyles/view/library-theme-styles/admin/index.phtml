@@ -1,0 +1,31 @@
+<?php
+$escape = $this->plugin('escapeHtml');
+$message = $this->message ?? null;
+$error = $this->error ?? null;
+$siteSlug = $this->siteSlug ?? null;
+?>
+<h1>LibraryThemeStyles</h1>
+<p>Load defaults into LibraryTheme settings or save current settings as defaults.</p>
+<?php if ($message): ?>
+  <div class="messages success"><?php echo $escape($message); ?></div>
+<?php endif; ?>
+<?php if ($error): ?>
+  <div class="messages error"><?php echo $escape($error); ?></div>
+<?php endif; ?>
+<form method="post">
+  <?php echo $this->csrf()->getInput(); ?>
+  <label>Target Preset:
+    <select name="target_preset">
+      <option value="modern">Modern</option>
+      <option value="traditional">Traditional</option>
+    </select>
+  </label>
+  <label>Site Slug (optional):
+    <input type="text" name="site" value="<?php echo $escape($siteSlug ?: ''); ?>" placeholder="library" />
+  </label>
+  <div style="margin: 12px 0; display: flex; gap: 10px;">
+    <button type="submit" name="action" value="load_defaults_into_settings" class="button">Load Defaults into LibraryTheme Settings</button>
+    <button type="submit" name="action" value="save_settings_as_defaults" class="button">Save Current Settings as Preset Defaults</button>
+  </div>
+</form>
+
