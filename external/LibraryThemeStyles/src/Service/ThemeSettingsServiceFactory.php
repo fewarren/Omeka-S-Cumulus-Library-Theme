@@ -10,6 +10,14 @@ use Laminas\ServiceManager\Factory\FactoryInterface;
  */
 class ThemeSettingsServiceFactory implements FactoryInterface
 {
+    /**
+     * Create a ThemeSettingsService instance using dependencies from the container.
+     *
+     * @param ContainerInterface $container The dependency injection container.
+     * @param string $requestedName The requested service name.
+     * @param array|null $options Optional factory options.
+     * @return ThemeSettingsService The configured ThemeSettingsService instance.
+     */
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null): ThemeSettingsService
     {
         $api = $container->get('Omeka\ApiManager');

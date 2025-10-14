@@ -20,6 +20,11 @@ class ThemeSettingsService
     private SiteSettings $siteSettings;
     private ErrorHandler $errorHandler;
 
+    /**
+     * Create a ThemeSettingsService and store its required dependencies.
+     *
+     * Stores the injected ApiManager, global Settings, SiteSettings, and ErrorHandler for use by the service.
+     */
     public function __construct(
         ApiManager $api,
         Settings $settings,
@@ -33,13 +38,17 @@ class ThemeSettingsService
     }
 
     /**
-     * Apply preset values to theme settings for a specific site
+     * Apply a named preset into theme settings for a site or the global scope.
      *
-     * @param string|null $siteSlug Site slug or null for global settings
-     * @param string $themeKey Theme key (used for theme resolution if needed)
-     * @param string $preset Preset name (modern, traditional)
-     * @return array [count, values] - Number of settings applied and the preset values
-     * @throws \RuntimeException If preset is unknown or site cannot be resolved
+     * Merges the preset's key/value pairs into both the top-level theme_settings container
+     * (handling either a slug-keyed map or a flat structure) and the theme-specific
+     * namespaced settings (theme_settings_<slug>), then persists the updated containers.
+     *
+     * @param string|null $siteSlug Site slug, or null to target global settings
+     * @param string $themeKey Theme key used when resolving the theme slug if necessary
+     * @param string $preset Preset name (for example: "modern", "traditional")
+     * @return array [int $count, array $values] Number of settings applied and the applied preset values
+     * @throws \RuntimeException If the preset is unknown or the specified site cannot be resolved
      */
     public function applyPresetToThemeSettings(?string $siteSlug, string $themeKey, string $preset): array
     {
@@ -128,11 +137,13 @@ class ThemeSettingsService
     }
 
     /**
-     * Load stored defaults back into site settings
+     * Restore stored defaults for a preset into the target site's theme settings.
      *
-     * @param string|null $siteSlug Site slug or null for global settings
+     * Merges the stored defaults for the specified preset into the theme-specific settings (namespaced by theme slug) and persists the updated settings.
+     *
+     * @param string|null $siteSlug Site slug to target, or null to operate on global settings
      * @param string $preset Preset name to load defaults from
-     * @return array [count, message] - Number of settings loaded and status message
+     * @return array [count, message] — `count` is the number of keys written, `message` describes the updated settings key and counts
      */
     public function loadStoredDefaultsIntoSettings(?string $siteSlug, string $preset): array
     {
@@ -157,11 +168,11 @@ class ThemeSettingsService
     }
 
     /**
-     * Load stored defaults for a preset (without applying to settings)
+     * Retrieve stored default values for a preset without modifying settings.
      *
-     * @param string|null $siteSlug Site slug or null for global settings
-     * @param string $preset Preset name to load defaults from
-     * @return array [count, stored_defaults] - Number of defaults and the defaults array
+     * @param string|null $siteSlug Site slug or null for global settings.
+     * @param string $preset Preset name to load defaults from.
+     * @return array [int, array] The count of stored defaults and the defaults associative array.
      */
     public function loadStoredDefaults(?string $siteSlug, string $preset): array
     {
@@ -170,11 +181,11 @@ class ThemeSettingsService
     }
 
     /**
-     * Count theme settings for a site
+     * Determine the number of theme settings for the resolved theme.
      *
-     * @param string $siteSlug Site slug
-     * @param string $themeKey Theme key (used for theme resolution if needed)
-     * @return int Number of theme settings
+     * @param string $siteSlug Site slug used to resolve a site-specific settings instance.
+     * @param string $themeKey Theme key used to resolve the theme slug when the site's theme is not available.
+     * @return int The number of theme settings present for the resolved theme.
      */
     public function countThemeSettings(string $siteSlug, string $themeKey): int
     {
@@ -200,12 +211,12 @@ class ThemeSettingsService
     }
 
     /**
-     * Inspect a single setting key
+     * Retrieve the value of a single theme setting for a given site and theme.
      *
-     * @param string $siteSlug Site slug
-     * @param string $themeKey Theme key (used for theme resolution if needed)
-     * @param string $key Setting key to inspect
-     * @return mixed Setting value or null if not found
+     * @param string $siteSlug Site slug or empty to target global settings.
+     * @param string $themeKey Theme key used to resolve the theme when necessary.
+     * @param string $key Setting key to inspect.
+     * @return mixed The setting value if present, `null` if not found.
      */
     public function inspectSingleKey(string $siteSlug, string $themeKey, string $key)
     {
@@ -233,12 +244,14 @@ class ThemeSettingsService
     }
 
     /**
-     * Compare current settings with a preset
+     * Produce a concise list of differences between the current theme settings for a site and a named preset.
      *
-     * @param string $siteSlug Site slug
-     * @param string $themeKey Theme key (used for theme resolution if needed)
+     * The result is a comma-separated list (up to 15 entries) of differences formatted as `key:current -> preset` where `current` and `preset` are JSON-encoded values; returns an empty string if there are no differences or the preset is missing.
+     *
+     * @param string $siteSlug Site slug (null/empty resolved as global)
+     * @param string $themeKey Theme key used to resolve the theme when necessary
      * @param string $preset Preset name to compare against
-     * @return string Formatted difference string
+     * @return string Formatted difference string as described above
      */
     public function diffVsPreset(string $siteSlug, string $themeKey, string $preset): string
     {
@@ -261,11 +274,11 @@ class ThemeSettingsService
     }
 
     /**
-     * Inspect theme settings and return formatted summary
+     * Produce a concise summary of the resolved theme's settings and container state.
      *
-     * @param string $siteSlug Site slug
-     * @param string $themeKey Theme key (used for theme resolution if needed)
-     * @return string Formatted inspection summary
+     * @param string $siteSlug Site slug used to select site-specific settings; an empty value targets global settings.
+     * @param string $themeKey Theme key used to resolve the theme slug when the site does not define one.
+     * @return string A formatted string describing the namespaced settings key, the number of namespaced keys, the container type and its key count, and up to 15 sample namespaced keys.
      */
     public function inspectThemeSettings(string $siteSlug, string $themeKey): string
     {
@@ -304,12 +317,11 @@ class ThemeSettingsService
     }
 
     /**
-     * Verify stored defaults against current settings
+     * Compare stored preset defaults with the current theme settings and produce a summary report.
      *
-     * @param string $siteSlug Site slug
-     * @param string $preset Preset name to verify against
-     * @return string Formatted verification report
-     */
+     * @param string $siteSlug The site slug to target (empty string refers to global settings).
+     * @param string $preset The preset name whose stored defaults will be compared.
+     * @return string A formatted summary reporting counts of settings, defaults, missing keys in each, and sample diffs. */
     public function verifyDefaultsVsSettings(string $siteSlug, string $preset): string
     {
         $site = $this->resolveSite($siteSlug);

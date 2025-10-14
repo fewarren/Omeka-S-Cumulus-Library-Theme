@@ -131,7 +131,12 @@ class ThemeSettingsService
     }
 
     /**
-     * Load stored defaults back into site settings
+     * Load stored defaults for a preset into the target site's active theme settings.
+     *
+     * @param string|null $siteSlug The site slug to target, or null for global settings.
+     * @param string $preset The preset identifier whose stored defaults should be loaded.
+     * @return array An array with two elements: [0] the number of stored defaults applied (int), [1] the merged settings array.
+     * @throws \RuntimeException If no stored defaults are found for the preset or the stored defaults are not a valid array.
      */
     public function loadStoredDefaults(?string $siteSlug, string $preset): array
     {
