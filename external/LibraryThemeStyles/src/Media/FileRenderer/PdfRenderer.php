@@ -31,6 +31,22 @@ class PdfRenderer implements RendererInterface
      *                       - string 'height' : container height (default '800px')
      *                       - string 'embed_type' : 'iframe' or 'object' (default 'iframe')
      * @return string HTML markup for the embedded PDF viewer and any debug comments.
+    /**
+     * Render HTML for embedding a PDF in the browser using an iframe or object element.
+     *
+     * Renders a container div sized by the provided options and returns an iframe-based
+     * or object-based embedded PDF viewer. Behavior is influenced by theme settings
+     * (hiding download links and using a custom PDF.js viewer) and by the `embed_type`
+     * option.
+     *
+     * @param PhpRenderer $view Renderer used to access view helpers, translations, and assets.
+     * @param MediaRepresentation $media Media representation providing `originalUrl()`, `displayTitle()`, and `filename()`.
+     * @param array $options Rendering options merged with DEFAULT_OPTIONS. Recognized keys:
+     *                       - `width` (string): container width (e.g., "100%")
+     *                       - `height` (string): container height (e.g., "800px")
+     *                       - `embed_type` (string): "iframe" (default) or "object"
+     * @return string The HTML string for the embedded PDF viewer (container with iframe or object and accessible fallback).
+     */
     public function render(PhpRenderer $view, MediaRepresentation $media, array $options = [])
     {
         $options = array_merge(self::DEFAULT_OPTIONS, $options);
