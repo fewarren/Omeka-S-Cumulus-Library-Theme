@@ -11,7 +11,43 @@ namespace LibraryThemeStyles\Service;
 class PresetManager
 {
     /**
-     * Get all available theme presets
+     * Get all available theme presets (static accessor for factory use)
+     * 
+     * @return array Associative array of preset name => preset values
+     */
+    public static function getAllPresets(): array
+    {
+        $instance = new self();
+        return $instance->getPresetMap();
+    }
+
+    /**
+     * Get a specific preset by name (static accessor for service use)
+     * 
+     * @param string $presetName Name of the preset to retrieve
+     * @return array Preset values
+     * @throws \InvalidArgumentException If preset doesn't exist
+     */
+    public static function getPreset(string $presetName): array
+    {
+        $instance = new self();
+        return $instance->getPresetInstance($presetName);
+    }
+
+    /**
+     * Check if a preset exists (static accessor for service use)
+     * 
+     * @param string $presetName Name of the preset to check
+     * @return bool True if preset exists, false otherwise
+     */
+    public static function hasPreset(string $presetName): bool
+    {
+        $instance = new self();
+        return $instance->hasPresetInstance($presetName);
+    }
+
+    /**
+     * Get all available theme presets (instance method)
      * 
      * @return array Associative array of preset name => preset values
      */
@@ -65,13 +101,13 @@ class PresetManager
     }
 
     /**
-     * Retrieve a theme preset configuration by name.
-     *
-     * @param string $presetName The name of the preset to retrieve.
-     * @return array The preset configuration array.
-     * @throws \InvalidArgumentException If no preset exists with the given name.
+     * Get a specific preset by name (instance method)
+     * 
+     * @param string $presetName Name of the preset to retrieve
+     * @return array Preset values
+     * @throws \InvalidArgumentException If preset doesn't exist
      */
-    public function getPreset(string $presetName): array
+    public function getPresetInstance(string $presetName): array
     {
         $presets = $this->getPresetMap();
         if (!isset($presets[$presetName])) {
@@ -81,9 +117,9 @@ class PresetManager
     }
 
     /**
-     * Return the names of all configured presets.
-     *
-     * @return string[] The list of available preset names.
+     * Get list of available preset names
+     * 
+     * @return array List of preset names
      */
     public function getAvailablePresets(): array
     {
@@ -91,13 +127,14 @@ class PresetManager
     }
 
     /**
-     * Determine whether a preset with the given name is available.
-     *
-     * @param string $presetName The preset identifier to check.
-     * @return bool `true` if a preset with the given name exists, `false` otherwise.
+     * Check if a preset exists (instance method)
+     * 
+     * @param string $presetName Name of the preset to check
+     * @return bool True if preset exists, false otherwise
      */
-    public function hasPreset(string $presetName): bool
+    public function hasPresetInstance(string $presetName): bool
     {
         return isset($this->getPresetMap()[$presetName]);
     }
 }
+
