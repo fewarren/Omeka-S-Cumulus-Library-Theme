@@ -46,12 +46,14 @@ $valueLang = $filterLocale ? [$lang, ''] : null;
             $isAudio = (stripos($mediaType, 'audio/') === 0);
             $isVideo = (stripos($mediaType, 'video/') === 0);
 
-            echo "\n<!-- DEBUG LT media/show.phtml: MEDIA TYPE DETECTION -->\n";
-            echo "<!-- mediaType=" . $mediaType . " -->\n";
-            echo "<!-- hasOriginal=" . ($hasOriginal ? 'YES' : 'NO') . " -->\n";
-            echo "<!-- isPDF=" . ($isPDF ? 'YES' : 'NO') . " -->\n";
-            echo "<!-- isAudio=" . ($isAudio ? 'YES' : 'NO') . " -->\n";
-            echo "<!-- isVideo=" . ($isVideo ? 'YES' : 'NO') . " -->\n";
+            if (getenv('APP_DEBUG') === 'true') {
+                echo "\n<!-- DEBUG LT media/show.phtml: MEDIA TYPE DETECTION -->\n";
+                echo "<!-- mediaType=" . htmlspecialchars($mediaType, ENT_QUOTES, 'UTF-8') . " -->\n";
+                echo "<!-- hasOriginal=" . ($hasOriginal ? 'YES' : 'NO') . " -->\n";
+                echo "<!-- isPDF=" . ($isPDF ? 'YES' : 'NO') . " -->\n";
+                echo "<!-- isAudio=" . ($isAudio ? 'YES' : 'NO') . " -->\n";
+                echo "<!-- isVideo=" . ($isVideo ? 'YES' : 'NO') . " -->\n";
+            }
 
             // PDF: Embed in iframe for immediate viewing
             if ($isPDF && $hasOriginal) {
@@ -68,17 +70,19 @@ $valueLang = $filterLocale ? [$lang, ''] : null;
                 $nativePdfUrl = $media->originalUrl() . $toolbarParam;
 
                 // COMPREHENSIVE DEBUG OUTPUT
-                echo "\n<!-- ===== PDF VIEWER ROUTING DEBUG ===== -->\n";
-                echo "<!-- Theme Setting 'hide_download_links': '" . $this->themeSetting('hide_download_links', 'NOT_SET') . "' -->\n";
-                echo "<!-- Theme Setting 'use_custom_pdfjs_viewer': '" . $this->themeSetting('use_custom_pdfjs_viewer', 'NOT_SET') . "' -->\n";
-                echo "<!-- hideDownloads boolean: " . ($hideDownloads ? 'TRUE' : 'FALSE') . " -->\n";
-                echo "<!-- useCustomPdfjs boolean: " . ($useCustomPdfjs ? 'TRUE' : 'FALSE') . " -->\n";
-                echo "<!-- User Agent: '" . $userAgent . "' -->\n";
-                echo "<!-- isFirefox: " . ($isFirefox ? 'TRUE' : 'FALSE') . " -->\n";
-                echo "<!-- isChrome: " . ($isChrome ? 'TRUE' : 'FALSE') . " -->\n";
-                echo "<!-- isSafari: " . ($isSafari ? 'TRUE' : 'FALSE') . " -->\n";
-                echo "<!-- Condition Check: hideDownloads(" . ($hideDownloads ? 'T' : 'F') . ") && useCustomPdfjs(" . ($useCustomPdfjs ? 'T' : 'F') . ") = " . (($hideDownloads && $useCustomPdfjs) ? 'TRUE' : 'FALSE') . " -->\n";
-                echo "<!-- ===================================== -->\n";
+                if (getenv('APP_DEBUG') === 'true') {
+                    echo "\n<!-- ===== PDF VIEWER ROUTING DEBUG ===== -->\n";
+                    echo "<!-- Theme Setting 'hide_download_links': '" . htmlspecialchars($this->themeSetting('hide_download_links', 'NOT_SET'), ENT_QUOTES, 'UTF-8') . "' -->\n";
+                    echo "<!-- Theme Setting 'use_custom_pdfjs_viewer': '" . htmlspecialchars($this->themeSetting('use_custom_pdfjs_viewer', 'NOT_SET'), ENT_QUOTES, 'UTF-8') . "' -->\n";
+                    echo "<!-- hideDownloads boolean: " . ($hideDownloads ? 'TRUE' : 'FALSE') . " -->\n";
+                    echo "<!-- useCustomPdfjs boolean: " . ($useCustomPdfjs ? 'TRUE' : 'FALSE') . " -->\n";
+                    echo "<!-- User Agent: '" . htmlspecialchars($userAgent, ENT_QUOTES, 'UTF-8') . "' -->\n";
+                    echo "<!-- isFirefox: " . ($isFirefox ? 'TRUE' : 'FALSE') . " -->\n";
+                    echo "<!-- isChrome: " . ($isChrome ? 'TRUE' : 'FALSE') . " -->\n";
+                    echo "<!-- isSafari: " . ($isSafari ? 'TRUE' : 'FALSE') . " -->\n";
+                    echo "<!-- Condition Check: hideDownloads(" . ($hideDownloads ? 'T' : 'F') . ") && useCustomPdfjs(" . ($useCustomPdfjs ? 'T' : 'F') . ") = " . (($hideDownloads && $useCustomPdfjs) ? 'TRUE' : 'FALSE') . " -->\n";
+                    echo "<!-- ===================================== -->\n";
+                }
 
                 // If hiding downloads AND custom pdf.js viewer enabled, route through custom viewer
                 // (Originally Firefox-only, but expanding to all browsers for better coverage)
@@ -86,7 +90,9 @@ $valueLang = $filterLocale ? [$lang, ''] : null;
                     $viewerBase = $this->assetUrl('pdf-custom-viewer.html');
                     $sep = (strpos($viewerBase, '?') !== false) ? '&' : '?';
                     $viewerUrl = $viewerBase . $sep . 'file=' . rawurlencode($media->originalUrl()) . '&hideDownloads=1';
-                    echo "\n<!-- DEBUG PDF ROUTING: using custom pdf.js viewer; base='" . $viewerBase . "', viewerUrl='" . $viewerUrl . "' -->\n";
+                    if (getenv('APP_DEBUG') === 'true') {
+                        echo "\n<!-- DEBUG PDF ROUTING: using custom pdf.js viewer; base='" . htmlspecialchars($viewerBase, ENT_QUOTES, 'UTF-8') . "', viewerUrl='" . htmlspecialchars($viewerUrl, ENT_QUOTES, 'UTF-8') . "' -->\n";
+                    }
                     echo sprintf(
                         '<div class="pdf-viewer-container" style="width: 100%%; height: 800px; margin-bottom: 20px;">
     <iframe src="%s" width="100%%" height="100%%" style="border: 1px solid #ccc;" title="%s"></iframe>
@@ -96,7 +102,9 @@ $valueLang = $filterLocale ? [$lang, ''] : null;
                     );
                 } else {
                     // Default/native embedding
-                    echo "\n<!-- DEBUG PDF ROUTING: using native viewer; url='" . $nativePdfUrl . "' -->\n";
+                    if (getenv('APP_DEBUG') === 'true') {
+                        echo "\n<!-- DEBUG PDF ROUTING: using native viewer; url='" . htmlspecialchars($nativePdfUrl, ENT_QUOTES, 'UTF-8') . "' -->\n";
+                    }
                     echo sprintf(
                         '<div class="pdf-viewer-container" style="width: 100%%; height: 800px; margin-bottom: 20px;">
     <iframe src="%s" width="100%%" height="100%%" style="border: 1px solid #ccc;" title="%s">
@@ -125,7 +133,7 @@ $valueLang = $filterLocale ? [$lang, ''] : null;
                 echo "\n<!-- DEBUG LT media/show.phtml: RENDERING AUDIO PLAYER via media->render() -->\n";
                 $audioOutput = $media->render($audioOptions);
                 echo "<!-- Audio render output length: " . strlen($audioOutput) . " bytes -->\n";
-                echo "<!-- Audio render output preview: " . substr(strip_tags($audioOutput), 0, 100) . "... -->\n";
+                echo "<!-- Audio render output preview: " . htmlspecialchars(substr(strip_tags($audioOutput), 0, 100), ENT_QUOTES, 'UTF-8') . "... -->\n";
                 echo $audioOutput;
                 echo "\n<!-- DEBUG LT media/show.phtml: AUDIO PLAYER RENDERED -->\n";
             }

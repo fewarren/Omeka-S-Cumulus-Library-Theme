@@ -147,8 +147,21 @@ class ThemeSettingsService
             throw new \RuntimeException("Invalid stored defaults format for preset: {$preset}");
         }
 
-        // Apply the stored defaults as if they were a preset
-        return $this->applyPresetToThemeSettings($siteSlug, ModuleConfig::DEFAULT_THEME_KEY, $preset);
+        // Apply the stored defaults directly to the target context
+        $site = $this->resolveSite($siteSlug);
+        $siteSettings = $this->getSiteSettingsInstance($site);
+        $themeSlug = $this->getThemeSlug($site);
+        $key = ModuleConfig::getThemeSettingsKey($themeSlug);
+        $current = $siteSettings->get($key, []);
+        $current = is_array($current) ? $current : [];
+        $merged = array_merge($current, $storedDefaults);
+        $siteSettings->set($key, $merged);
+        $this->errorHandler->logSuccess('Loaded stored defaults into theme settings', [
+            'preset' => $preset,
+            'site_slug' => $siteSlug,
+            'settings_count' => count($storedDefaults),
+        ]);
+        return [count($storedDefaults), $merged];
     }
 
     /**

@@ -16,10 +16,9 @@ class ModuleConfigServiceFactory implements FactoryInterface
         $settings = $container->get('Omeka\Settings');
         $siteSettings = $container->get('Omeka\Settings\Site');
         $themeSettingsService = $container->get(\LibraryThemeStyles\Service\ThemeSettingsService::class);
-        $presetManager = $container->get(\LibraryThemeStyles\Service\PresetManager::class);
 
-        // Get preset map from centralized PresetManager
-        $presetMap = $presetManager->getPresetMap();
+        // Get preset map from static accessor (PresetManager service no longer registered)
+        $presetMap = PresetManager::getAllPresets();
 
         return new ModuleConfigService($api, $settings, $siteSettings, $themeSettingsService, $presetMap);
     }

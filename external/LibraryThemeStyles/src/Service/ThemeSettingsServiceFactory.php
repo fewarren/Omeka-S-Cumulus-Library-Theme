@@ -15,11 +15,8 @@ class ThemeSettingsServiceFactory implements FactoryInterface
         $api = $container->get('Omeka\ApiManager');
         $settings = $container->get('Omeka\Settings');
         $siteSettings = $container->get('Omeka\Settings\Site');
-        $presetManager = $container->get(\LibraryThemeStyles\Service\PresetManager::class);
+        $errorHandler = $container->get(\LibraryThemeStyles\Service\ErrorHandler::class);
 
-        // Get preset map from centralized PresetManager
-        $presetMap = $presetManager->getPresetMap();
-
-        return new ThemeSettingsService($api, $settings, $siteSettings, $presetMap);
+        return new ThemeSettingsService($api, $settings, $siteSettings, $errorHandler);
     }
 }

@@ -18,7 +18,8 @@ $resourceMedia = $resource->media();
         <?php
         // Choose representation to thumbnail: prefer item if it has a custom thumbnail, else the media
         $preferredRep = $resource->thumbnail() ? $resource : ($media->thumbnail() ? $media : $media);
-        $img = $thumbnailHelper($preferredRep, 'large', [
+        // Use medium by default to avoid overly large thumbnails; no size option is provided by this block
+        $img = $thumbnailHelper($preferredRep, 'medium', [
             'class' => 'media-embed-thumbnail',
             'style' => 'max-width: 100%; height: auto;',
         ]);
@@ -36,7 +37,9 @@ $resourceMedia = $resource->media();
                 $linkUrl = $media->originalUrl();
                 $linkClass = 'media-embed-link lightbox-trigger';
                 $dataAttrs = ' data-lightbox="media-embeds" data-title="' . $escape($media->displayTitle() ?: $resource->displayTitle()) . '"';
-                echo "\n<!-- DEBUG LT media-embeds.phtml: IMAGE → lightbox, linkUrl=" . $linkUrl . " -->\n";
+                if (getenv('APP_DEBUG') === 'true') {
+                    echo "\n<!-- DEBUG LT media-embeds.phtml: IMAGE → lightbox, linkUrl=" . $linkUrl . " -->\n";
+                }
         ?>
         <a href="<?= $escape($linkUrl) ?>"
            class="<?= $escape($linkClass) ?>"<?= $dataAttrs ?>
@@ -67,7 +70,9 @@ $resourceMedia = $resource->media();
                 $linkUrl = $media->url();
                 $linkClass = 'media-embed-link';
                 $dataAttrs = '';
-                echo "\n<!-- DEBUG LT media-embeds.phtml: PDF/VIDEO/OTHER → media page, linkUrl=" . $linkUrl . " -->\n";
+                if (getenv('APP_DEBUG') === 'true') {
+                    echo "\n<!-- DEBUG LT media-embeds.phtml: PDF/VIDEO/OTHER → media page, linkUrl=" . $linkUrl . " -->\n";
+                }
         ?>
         <a href="<?= $escape($linkUrl) ?>"
            class="<?= $escape($linkClass) ?>"<?= $dataAttrs ?>
@@ -79,5 +84,7 @@ $resourceMedia = $resource->media();
         ?>
     </div>
     <?php endforeach; ?>
+
+
 </div>
 <?php endif; ?>

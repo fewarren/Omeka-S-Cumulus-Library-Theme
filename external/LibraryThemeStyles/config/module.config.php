@@ -19,9 +19,7 @@ return [
         'factories' => [
             Controller\AdminController::class => function ($sm) {
                 return new Controller\AdminController(
-                    $sm->get('Omeka\ApiManager'),
-                    $sm->get(\LibraryThemeStyles\Service\ErrorHandler::class),
-                    $sm->get(ThemeSettingsService::class)
+                    $sm->get(\LibraryThemeStyles\Service\ModuleConfigService::class)
                 );
             },
         ],
