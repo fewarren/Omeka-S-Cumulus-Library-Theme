@@ -11,11 +11,11 @@ use Laminas\ServiceManager\Factory\FactoryInterface;
 class ThemeSettingsServiceFactory implements FactoryInterface
 {
     /**
-     * Create a ThemeSettingsService instance using dependencies from the container.
+     * Creates a ThemeSettingsService configured with dependencies retrieved from the container.
      *
-     * @param ContainerInterface $container The dependency injection container.
-     * @param string $requestedName The requested service name.
-     * @param array|null $options Optional factory options.
+     * @param ContainerInterface $container Dependency injection container used to fetch required services.
+     * @param string $requestedName The requested service name (not used by this factory).
+     * @param array|null $options Optional factory options (unused).
      * @return ThemeSettingsService The configured ThemeSettingsService instance.
      */
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null): ThemeSettingsService
