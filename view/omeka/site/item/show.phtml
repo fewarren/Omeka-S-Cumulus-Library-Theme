@@ -61,8 +61,8 @@ $itemSets = $item->itemSets();
                 ?>
                 <nav class="breadcrumbs" aria-label="<?= $translate('Breadcrumb') ?>">
                     <ul>
-                        <li><a href="<?= $this->url('site', [], true) ?>"><?= $translate('Home') ?></a></li>
-                        <li><a href="<?= $this->url('site/resource', ['controller' => 'item', 'action' => 'browse'], true) ?>"><?= $translate('Items') ?></a></li>
+                        <li><a href="<?= $this->url('site', [], ['force_canonical' => true]) ?>"><?= $translate('Home') ?></a></li>
+                        <li><a href="<?= $this->url('site/resource', ['controller' => 'item', 'action' => 'browse'], ['force_canonical' => true]) ?>"><?= $translate('Items') ?></a></li>
                         <?php if (!empty($itemSets)): ?>
                             <?php foreach ($itemSets as $itemSet): ?>
                             <li><a href="<?= $escape($itemSet->url()) ?>"><?= $escape($itemSet->displayTitle()) ?></a></li>

@@ -35,7 +35,7 @@ if ($consent instanceof \Laminas\Form\Element\Hidden) {
     $form->remove('submit')->add($submit->setAttribute('class', 'button'));
 }
 $consent
-    ->setLabel('<a href="' . $this->url('site/page', ['page-slug' => 'avis'], true) . '" target="_blank">He llegit i accepto les condicions d’ús de les imatges</a>')
+    ->setLabel('<a href="' . $this->url('site/page', ['page-slug' => 'avis'], ['force_canonical' => true]) . '" target="_blank">He llegit i accepto les condicions d’ús de les imatges</a>')
     ->setLabelAttributes(['class' => 'label-checkbox'])
     ->setLabelOption('disable_html_escape', true);
 ?>

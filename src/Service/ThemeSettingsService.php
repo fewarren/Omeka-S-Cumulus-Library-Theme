@@ -86,16 +86,13 @@ class ThemeSettingsService
     }
 
     /**
-     * Store the current theme settings for a site as the defaults for a named preset.
+     * Save current theme settings as preset defaults
      *
-     * Retrieves the active theme settings for the given site (or global scope), validates them,
-     * and persists them under the preset's defaults key in global settings as JSON.
-     *
-     * @param string|null $siteSlug Site slug or null for global scope.
-     * @param string $themeKey Expected theme key used to validate the current theme.
-     * @param string $preset Preset name under which to save the defaults.
-     * @return array [int $count, array $stored] First element is the number of settings saved; second is the saved settings array.
-     * @throws \RuntimeException If the theme key does not match, no settings are found, or validation fails.
+     * @param string|null $siteSlug Site slug or null for global settings
+     * @param string $themeKey Expected theme key for validation (prevents theme mismatch)
+     * @param string $preset Preset name to save settings under
+     * @return array [count, stored] - Number of settings saved and stored settings
+     * @throws \RuntimeException If theme key mismatch, settings not found, or validation fails
      */
     public function saveSettingsAsPresetDefaults(?string $siteSlug, string $themeKey, string $preset): array
     {
@@ -134,15 +131,7 @@ class ThemeSettingsService
     }
 
     /**
-     * Load a preset's stored defaults and merge them into the target site's active theme settings.
-     *
-     * Retrieves JSON-encoded defaults for the given preset, validates and decodes them, then merges
-     * those defaults into the resolved site's theme settings and persists the result.
-     *
-     * @param string|null $siteSlug The site slug to target, or null to target the global scope.
-     * @param string $preset The preset identifier whose stored defaults should be loaded.
-     * @return array An array where element 0 is the number of stored defaults applied (int) and element 1 is the merged settings array.
-     * @throws \RuntimeException If no stored defaults are found for the preset or the stored defaults are not a valid array.
+     * Load stored defaults back into site settings
      */
     public function loadStoredDefaults(?string $siteSlug, string $preset): array
     {
@@ -290,16 +279,8 @@ class ThemeSettingsService
     }
 
     /**
-         * Retrieve the active theme settings for a given theme slug, using namespaced settings first and falling back to container-based variants.
-         *
-         * Attempts to read settings under the namespaced theme key; if that is missing or not an array, it will try the theme settings container:
-         * - If the container contains an array entry keyed by the theme slug, that entry is returned.
-         * - Otherwise, if the container is a non-empty flat array, the container itself is returned.
-         *
-         * @param \LibraryThemeStyles\Config\Settings|\LibraryThemeStyles\Config\SiteSettings $siteSettings Settings storage to read from (global or site-scoped).
-         * @param string $themeSlug The theme slug used to locate namespaced or container entries.
-         * @return array The resolved theme settings as an associative array (empty array if none found).
-         */
+     * Get current theme settings with fallback logic
+     */
     private function getCurrentThemeSettings($siteSettings, string $themeSlug): array
     {
         // Prefer namespaced theme settings; fall back to container variants
