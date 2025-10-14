@@ -17,6 +17,7 @@
         'library.css',
         'library-polish.css',
         'library-reoriented-design.css',
+        'carousel-fix.css', // Fix Item Carousel Block compatibility
         'font-overrides.css' // Load last for maximum specificity
     ];
 
@@ -29,6 +30,10 @@
             $this->headLink()->appendStylesheet($cssUrl);
         }
     }
+
+// Load jQuery first in head (required for all other scripts and inline JavaScript)
+$this->headScript()->prependFile($this->assetUrl('vendor/jquery/jquery.min.js', 'Omeka'));
+
 // Load runtime caption background fix script (always safe; no side effects if no thumbnails present)
 $jsPathFix = $themeDir . '/asset/js/caption-fix.js';
 $jsUrlFix = $this->assetUrl('js/caption-fix.js');
@@ -36,6 +41,34 @@ if (file_exists($jsPathFix)) {
     $this->headScript()->appendFile($jsUrlFix . '?v=' . filemtime($jsPathFix));
 } else {
     $this->headScript()->appendFile($jsUrlFix);
+}
+
+// Load carousel fix script for ItemCarouselBlock compatibility
+$jsPathCarousel = $themeDir . '/asset/js/carousel-fix.js';
+$jsUrlCarousel = $this->assetUrl('js/carousel-fix.js');
+if (file_exists($jsPathCarousel)) {
+    $this->headScript()->appendFile($jsUrlCarousel . '?v=' . filemtime($jsPathCarousel));
+} else {
+    $this->headScript()->appendFile($jsUrlCarousel);
+}
+
+// Load carousel diagnostic script (only if debug parameter is present)
+if (isset($_GET['carousel_debug'])) {
+    $jsPathDiagnostic = $themeDir . '/asset/js/carousel-diagnostic.js';
+    $jsUrlDiagnostic = $this->assetUrl('js/carousel-diagnostic.js');
+    if (file_exists($jsPathDiagnostic)) {
+        $this->headScript()->appendFile($jsUrlDiagnostic . '?v=' . filemtime($jsPathDiagnostic));
+    } else {
+        $this->headScript()->appendFile($jsUrlDiagnostic);
+    }
+
+    $jsPathAnalyzer = $themeDir . '/asset/js/carousel-style-analyzer.js';
+    $jsUrlAnalyzer = $this->assetUrl('js/carousel-style-analyzer.js');
+    if (file_exists($jsPathAnalyzer)) {
+        $this->headScript()->appendFile($jsUrlAnalyzer . '?v=' . filemtime($jsPathAnalyzer));
+    } else {
+        $this->headScript()->appendFile($jsUrlAnalyzer);
+    }
 }
 
 $this->headLink()->appendStylesheet('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&display=swap');
@@ -651,6 +684,7 @@ $this->headLink()->appendStylesheet('https://fonts.googleapis.com/css2?family=Co
     })();
     </script>
 
+    <?php echo $this->headScript(); ?>
 </head>
 <?php $submenuEnabled = ((string)$this->themeSetting('render_submenu_by_default', '0') === '1'); ?>
 <body class="<?php echo $submenuEnabled ? 'submenu-enabled' : 'submenu-disabled'; ?>">
@@ -658,15 +692,19 @@ $this->headLink()->appendStylesheet('https://fonts.googleapis.com/css2?family=Co
     // User bar - Only show in admin area, not on public pages
     try {
         $userIsAllowed = $this->userIsAllowed('Omeka\Entity\Site', 'update');
-        $isAdminArea = strpos($this->serverUrl(true), '/admin') !== false;
+        // Use request URI for more reliable admin area detection
+        $currentUri = $this->getRequest()->getUri()->getPath();
+        $isAdminArea = strpos($currentUri, '/admin') !== false;
         $showUserBar = $this->siteSetting('show_user_bar', 1) && $this->identity() && $isAdminArea;
 
-        // DEBUG: User bar visibility logic
-        echo "\n<!-- DEBUG USER BAR: show_user_bar setting=" . ($this->siteSetting('show_user_bar', 1) ? 'TRUE' : 'FALSE') .
-             ", identity=" . ($this->identity() ? 'LOGGED_IN' : 'NOT_LOGGED_IN') .
-             ", isAdminArea=" . ($isAdminArea ? 'TRUE' : 'FALSE') .
-             ", showUserBar=" . ($showUserBar ? 'TRUE' : 'FALSE') .
-             ", userIsAllowed=" . ($userIsAllowed ? 'TRUE' : 'FALSE') . " -->\n";
+        // DEBUG: User bar visibility logic (only in debug mode to prevent auth context leakage)
+        if (getenv('APP_DEBUG') === 'true') {
+            echo "\n<!-- DEBUG USER BAR: show_user_bar setting=" . ($this->siteSetting('show_user_bar', 1) ? 'TRUE' : 'FALSE') .
+                 ", identity=" . ($this->identity() ? 'LOGGED_IN' : 'NOT_LOGGED_IN') .
+                 ", isAdminArea=" . ($isAdminArea ? 'TRUE' : 'FALSE') .
+                 ", showUserBar=" . ($showUserBar ? 'TRUE' : 'FALSE') .
+                 ", userIsAllowed=" . ($userIsAllowed ? 'TRUE' : 'FALSE') . " -->\n";
+        }
 
         if ($showUserBar): ?>
         <div id="user-bar">
@@ -746,6 +784,5 @@ if (stripos($qs, 'debug=captions') !== false) {
 }
 ?>
 
-    <?php echo $this->headScript(); ?>
 </body>
 </html>

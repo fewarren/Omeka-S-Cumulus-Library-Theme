@@ -74,6 +74,6 @@ if ($site) {
 
 <!-- Navigation links to browse all content -->
 <div class="content-links" style="margin-top: 40px;">
-    <a href="<?php echo $url('site/resource', ['controller' => 'item'], true); ?>"><?php echo $translate('Browse All Items'); ?></a>
-    <a href="<?php echo $url('site/resource', ['controller' => 'item-set'], true); ?>"><?php echo $translate('Browse Collections'); ?></a>
+    <a href="<?php echo $url('site/resource', ['controller' => 'item'], ['force_canonical' => true]); ?>"><?php echo $translate('Browse All Items'); ?></a>
+    <a href="<?php echo $url('site/resource', ['controller' => 'item-set'], ['force_canonical' => true]); ?>"><?php echo $translate('Browse Collections'); ?></a>
 </div>

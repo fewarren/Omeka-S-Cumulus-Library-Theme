@@ -73,12 +73,42 @@ body.is-homepage .block.block-asset.image .caption { display: none !important; }
 $nav = $site->publicNav();
 $container = $nav->getContainer();
 $activePage = $nav->findActive($container);
+
+// Set pageViewModel for blocks that need it (e.g., Table of Contents from BlockPlus module)
+// This is normally set by the controller, but we need it available for manual block rendering
+if (!isset($this->pageViewModel)) {
+    // Create a ViewModel to act as pageViewModel
+    $pageViewModel = new \Laminas\View\Model\ViewModel();
+    $pageViewModel->setVariable('displayNavigation', $this->displayNavigation ?? true);
+    $this->pageViewModel = $pageViewModel;
+}
+
+// Check if first block is a Page Title block
+$firstBlockIsPageTitle = false;
+$pageTitleHtml = '';
+$blocks = $page->blocks();
+if (count($blocks) > 0) {
+    $firstBlock = $blocks[0];
+    if ($firstBlock->layout() === 'pageTitle') {
+        $firstBlockIsPageTitle = true;
+        // Render the page title block early
+        $pageTitleHtml = $this->blockLayout()->render($firstBlock);
+    }
+}
+
 if ($activePage):
 ?>
     <?php if ($activePage['depth'] !== 0): ?>
     <nav class="breadcrumbs"><?php echo $nav->breadcrumbs()->setPartial('common/foundation-breadcrumbs'); ?></nav>
     <?php endif; ?>
 <?php endif; ?>
+
+<?php
+// Render page title before submenu if it's the first block
+if ($firstBlockIsPageTitle):
+    echo $pageTitleHtml;
+endif;
+?>
 
 <?php if ($activePage && ((string)$this->themeSetting('render_submenu_by_default', '0') === '1')): ?>
     <?php if ($this->displayNavigation && $activePage['page']->hasPages()): ?>
@@ -105,7 +135,27 @@ if ($activePage):
 
         <div class="section-content">
             <div id="blocks" class="blocks">
-                <?php echo $this->content; ?>
+                <?php
+                // Render page blocks, skipping first if it's a Page Title (already rendered above)
+                if ($firstBlockIsPageTitle) {
+                    // Manually render blocks, skipping the first one
+                    $output = [];
+                    $blockIndex = 0;
+                    foreach ($page->blocks() as $block) {
+                        if ($blockIndex === 0) {
+                            // Skip first block (Page Title already rendered)
+                            $blockIndex++;
+                            continue;
+                        }
+                        $output[] = $this->blockLayout()->render($block);
+                        $blockIndex++;
+                    }
+                    echo implode('', $output);
+                } else {
+                    // Normal rendering - no Page Title block to skip
+                    echo $this->content;
+                }
+                ?>
             </div>
         </div>
     </div>

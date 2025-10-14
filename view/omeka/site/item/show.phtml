@@ -105,18 +105,24 @@ $itemSets = $item->itemSets();
                         'style' => 'width: 100%; height: auto; max-height: 600px; object-fit: contain;',
                         'alt' => $item->thumbnailAltText(),
                     ]);
-                    echo "\n<!-- DEBUG LT item/show.phtml main: preferredRep=" . (($preferredRep === $item) ? 'item' : 'media') . ", hasItemThumb=" . ($item->thumbnail() ? '1' : '0') . ", hasPrimaryMediaThumb=" . ($primaryMedia->thumbnail() ? '1' : '0') . ", mediaCount=" . count($itemMedia) . " -->\n";
+                    if (getenv('APP_DEBUG') === 'true') {
+                        echo "\n<!-- DEBUG LT item/show.phtml main: preferredRep=" . (($preferredRep === $item) ? 'item' : 'media') . ", hasItemThumb=" . ($item->thumbnail() ? '1' : '0') . ", hasPrimaryMediaThumb=" . ($primaryMedia->thumbnail() ? '1' : '0') . ", mediaCount=" . count($itemMedia) . " -->\n";
+                    }
                     ?>
                     <?php
                         $mt = method_exists($primaryMedia, 'mediaType') ? (string) $primaryMedia->mediaType() : '';
                         $isImage = (stripos($mt, 'image/') === 0);
                         $isAudio = (stripos($mt, 'audio/') === 0);
 
-                        echo "\n<!-- DEBUG LT item/show.phtml MAIN: mediaType=" . $mt . ", isImage=" . ($isImage ? 'YES' : 'NO') . ", isAudio=" . ($isAudio ? 'YES' : 'NO') . " -->\n";
+                        if (getenv('APP_DEBUG') === 'true') {
+                            echo "\n<!-- DEBUG LT item/show.phtml MAIN: mediaType=" . $mt . ", isImage=" . ($isImage ? 'YES' : 'NO') . ", isAudio=" . ($isAudio ? 'YES' : 'NO') . " -->\n";
+                        }
 
                         if ($isImage && $primaryMedia->hasOriginal()) {
                             $linkUrl = $primaryMedia->originalUrl();
-                            echo "\n<!-- DEBUG LT item/show.phtml MAIN: IMAGE → lightbox, linkUrl=" . $linkUrl . " -->\n";
+                            if (getenv('APP_DEBUG') === 'true') {
+                                echo "\n<!-- DEBUG LT item/show.phtml MAIN: IMAGE → lightbox, linkUrl=" . $linkUrl . " -->\n";
+                            }
                     ?>
                     <a href="<?= $escape($linkUrl) ?>"
                        class="lightbox-trigger"
@@ -125,7 +131,9 @@ $itemSets = $item->itemSets();
                         <?= $img ?>
                     </a>
                     <?php } elseif ($isAudio && $primaryMedia->hasOriginal()) {
-                            echo "\n<!-- DEBUG LT item/show.phtml MAIN: AUDIO → inline player -->\n";
+                            if (getenv('APP_DEBUG') === 'true') {
+                                echo "\n<!-- DEBUG LT item/show.phtml MAIN: AUDIO → inline player -->\n";
+                            }
                     ?>
                     <div class="item-show-audio-container" style="margin-bottom: 20px;">
                         <?= $img ?>
@@ -142,7 +150,9 @@ $itemSets = $item->itemSets();
                     </div>
                     <?php } else {
                             $linkUrl = $primaryMedia->url();
-                            echo "\n<!-- DEBUG LT item/show.phtml MAIN: PDF/VIDEO/OTHER → media page, linkUrl=" . $linkUrl . " -->\n";
+                            if (getenv('APP_DEBUG') === 'true') {
+                                echo "\n<!-- DEBUG LT item/show.phtml MAIN: PDF/VIDEO/OTHER → media page, linkUrl=" . $linkUrl . " -->\n";
+                            }
                     ?>
                     <a href="<?= $escape($linkUrl) ?>">
                         <?= $img ?>
@@ -177,18 +187,24 @@ $itemSets = $item->itemSets();
                             'style' => 'max-width: 100%; height: auto;',
                             'alt' => $item->thumbnailAltText(),
                         ]);
-                        echo "\n<!-- DEBUG LT item/show.phtml thumb #" . $index . ": preferredRep=" . (($preferredRep === $item) ? 'item' : 'media') . ", hasItemThumb=" . ($item->thumbnail() ? '1' : '0') . ", hasMediaThumb=" . ($media->thumbnail() ? '1' : '0') . " -->\n";
+                        if (getenv('APP_DEBUG') === 'true') {
+                            echo "\n<!-- DEBUG LT item/show.phtml thumb #" . $index . ": preferredRep=" . (($preferredRep === $item) ? 'item' : 'media') . ", hasItemThumb=" . ($item->thumbnail() ? '1' : '0') . ", hasMediaThumb=" . ($media->thumbnail() ? '1' : '0') . " -->\n";
+                        }
                         ?>
                         <?php
                             $mt = method_exists($media, 'mediaType') ? (string) $media->mediaType() : '';
                             $isImage = (stripos($mt, 'image/') === 0);
                             $isAudio = (stripos($mt, 'audio/') === 0);
 
-                            echo "\n<!-- DEBUG LT item/show.phtml THUMB #" . $index . ": mediaType=" . $mt . ", isImage=" . ($isImage ? 'YES' : 'NO') . ", isAudio=" . ($isAudio ? 'YES' : 'NO') . " -->\n";
+                            if (getenv('APP_DEBUG') === 'true') {
+                                echo "\n<!-- DEBUG LT item/show.phtml THUMB #" . $index . ": mediaType=" . $mt . ", isImage=" . ($isImage ? 'YES' : 'NO') . ", isAudio=" . ($isAudio ? 'YES' : 'NO') . " -->\n";
+                            }
 
                             if ($isImage && $media->hasOriginal()) {
                                 $thumbLinkUrl = $media->originalUrl();
-                                echo "\n<!-- DEBUG LT item/show.phtml THUMB #" . $index . ": IMAGE → lightbox, linkUrl=" . $thumbLinkUrl . " -->\n";
+                                if (getenv('APP_DEBUG') === 'true') {
+                                    echo "\n<!-- DEBUG LT item/show.phtml THUMB #" . $index . ": IMAGE → lightbox, linkUrl=" . $thumbLinkUrl . " -->\n";
+                                }
                         ?>
                         <a href="<?= $escape($thumbLinkUrl) ?>"
                            class="lightbox-trigger"
@@ -197,7 +213,9 @@ $itemSets = $item->itemSets();
                             <?= $thumbImg ?>
                         </a>
                         <?php } elseif ($isAudio && $media->hasOriginal()) {
-                                echo "\n<!-- DEBUG LT item/show.phtml THUMB #" . $index . ": AUDIO → inline player -->\n";
+                                if (getenv('APP_DEBUG') === 'true') {
+                                    echo "\n<!-- DEBUG LT item/show.phtml THUMB #" . $index . ": AUDIO → inline player -->\n";
+                                }
                         ?>
                         <div class="item-show-audio-thumb-container" style="margin-bottom: 10px;">
                             <?= $thumbImg ?>
@@ -214,7 +232,9 @@ $itemSets = $item->itemSets();
                         </div>
                         <?php } else {
                                 $thumbLinkUrl = $media->url();
-                                echo "\n<!-- DEBUG LT item/show.phtml THUMB #" . $index . ": PDF/VIDEO/OTHER → media page, linkUrl=" . $thumbLinkUrl . " -->\n";
+                                if (getenv('APP_DEBUG') === 'true') {
+                                    echo "\n<!-- DEBUG LT item/show.phtml THUMB #" . $index . ": PDF/VIDEO/OTHER → media page, linkUrl=" . $thumbLinkUrl . " -->\n";
+                                }
                         ?>
                         <a href="<?= $escape($thumbLinkUrl) ?>">
                             <?= $thumbImg ?>

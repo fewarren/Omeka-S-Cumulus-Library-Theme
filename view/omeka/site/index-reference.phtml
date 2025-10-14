@@ -58,7 +58,7 @@ $this->htmlElement('body')->appendAttribute('class', 'homepage library-homepage 
 <!-- Search Section -->
 <section class="search-section">
     <div class="search-container">
-        <form class="search-form" method="GET" action="<?php echo $url('site/resource', ['controller' => 'item', 'action' => 'browse'], true); ?>">
+        <form class="search-form" method="GET" action="<?php echo $url('site/resource', ['controller' => 'item', 'action' => 'browse'], ['force_canonical' => true]); ?>">
             <input type="search" name="fulltext_search" placeholder="<?php echo $translate('Search the collection...'); ?>">
             <button type="submit" class="search-button"><?php echo $translate('Search'); ?></button>
         </form>
@@ -73,8 +73,8 @@ $this->htmlElement('body')->appendAttribute('class', 'homepage library-homepage 
         <div class="sidebar-section">
             <h3><?php echo $translate('Browse'); ?></h3>
             <ul>
-                <li><a href="<?php echo $url('site/resource', ['controller' => 'item', 'action' => 'browse'], true); ?>"><?php echo $translate('All Items'); ?></a></li>
-                <li><a href="<?php echo $url('site/resource', ['controller' => 'item-set', 'action' => 'browse'], true); ?>"><?php echo $translate('Collections'); ?></a></li>
+                <li><a href="<?php echo $url('site/resource', ['controller' => 'item', 'action' => 'browse'], ['force_canonical' => true]); ?>"><?php echo $translate('All Items'); ?></a></li>
+                <li><a href="<?php echo $url('site/resource', ['controller' => 'item-set', 'action' => 'browse'], ['force_canonical' => true]); ?>"><?php echo $translate('Collections'); ?></a></li>
                 <li><a href="<?php echo $url('site/page', ['slug' => 'about']); ?>"><?php echo $translate('About'); ?></a></li>
             </ul>
         </div>
