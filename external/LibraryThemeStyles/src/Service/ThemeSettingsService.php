@@ -8,7 +8,7 @@ use Omeka\Settings\SiteSettings;
 
 /**
  * Service for managing theme settings operations
- * 
+ *
  * This service handles the business logic for applying presets, saving settings,
  * and other theme-related operations. It eliminates code duplication by centralizing
  * all theme settings logic in one place.
@@ -18,23 +18,23 @@ class ThemeSettingsService
     private ApiManager $api;
     private Settings $settings;
     private SiteSettings $siteSettings;
-    private array $presetMap;
+    private ErrorHandler $errorHandler;
 
     public function __construct(
         ApiManager $api,
         Settings $settings,
         SiteSettings $siteSettings,
-        array $presetMap
+        ErrorHandler $errorHandler
     ) {
         $this->api = $api;
         $this->settings = $settings;
         $this->siteSettings = $siteSettings;
-        $this->presetMap = $presetMap;
+        $this->errorHandler = $errorHandler;
     }
 
     /**
      * Apply preset values to theme settings for a specific site
-     * 
+     *
      * @param string|null $siteSlug Site slug or null for global settings
      * @param string $themeKey Theme key (used for theme resolution if needed)
      * @param string $preset Preset name (modern, traditional)
@@ -44,10 +44,10 @@ class ThemeSettingsService
     public function applyPresetToThemeSettings(?string $siteSlug, string $themeKey, string $preset): array
     {
         // Validate preset
-        if (!isset($this->presetMap[$preset])) {
+        if (!\LibraryThemeStyles\Service\PresetManager::hasPreset($preset)) {
             throw new \RuntimeException('Unknown preset: ' . $preset);
         }
-        $values = $this->presetMap[$preset];
+        $values = \LibraryThemeStyles\Service\PresetManager::getPreset($preset);
 
         // Resolve site and get appropriate settings instance
         $site = $this->resolveSite($siteSlug);
@@ -98,7 +98,7 @@ class ThemeSettingsService
 
     /**
      * Save current theme settings as preset defaults
-     * 
+     *
      * @param string|null $siteSlug Site slug or null for global settings
      * @param string $themeKey Theme key (used for theme resolution if needed)
      * @param string $preset Preset name to save settings under
@@ -123,13 +123,13 @@ class ThemeSettingsService
         // Persist into global settings as JSON (per-preset)
         $defaultsKey = 'LibraryThemeStyles_defaults_' . $preset;
         $this->settings->set($defaultsKey, json_encode($current));
-        
+
         return [count($current), $current];
     }
 
     /**
      * Load stored defaults back into site settings
-     * 
+     *
      * @param string|null $siteSlug Site slug or null for global settings
      * @param string $preset Preset name to load defaults from
      * @return array [count, message] - Number of settings loaded and status message
@@ -157,8 +157,21 @@ class ThemeSettingsService
     }
 
     /**
+     * Load stored defaults for a preset (without applying to settings)
+     *
+     * @param string|null $siteSlug Site slug or null for global settings
+     * @param string $preset Preset name to load defaults from
+     * @return array [count, stored_defaults] - Number of defaults and the defaults array
+     */
+    public function loadStoredDefaults(?string $siteSlug, string $preset): array
+    {
+        $defaults = $this->getStoredDefaults($preset);
+        return [count($defaults), $defaults];
+    }
+
+    /**
      * Count theme settings for a site
-     * 
+     *
      * @param string $siteSlug Site slug
      * @param string $themeKey Theme key (used for theme resolution if needed)
      * @return int Number of theme settings
@@ -182,13 +195,13 @@ class ThemeSettingsService
             }
             return count($container);
         }
-        
+
         return 0;
     }
 
     /**
      * Inspect a single setting key
-     * 
+     *
      * @param string $siteSlug Site slug
      * @param string $themeKey Theme key (used for theme resolution if needed)
      * @param string $key Setting key to inspect
@@ -215,13 +228,13 @@ class ThemeSettingsService
                 return $container[$key];
             }
         }
-        
+
         return null;
     }
 
     /**
      * Compare current settings with a preset
-     * 
+     *
      * @param string $siteSlug Site slug
      * @param string $themeKey Theme key (used for theme resolution if needed)
      * @param string $preset Preset name to compare against
@@ -234,8 +247,8 @@ class ThemeSettingsService
 
         $themeSlug = $this->getThemeSlug($site, $themeKey, $settingsInstance);
         $current = $settingsInstance->get('theme_settings_' . $themeSlug, []);
-        $want = $this->presetMap[$preset] ?? [];
-        
+        $want = \LibraryThemeStyles\Service\PresetManager::hasPreset($preset) ? \LibraryThemeStyles\Service\PresetManager::getPreset($preset) : [];
+
         $diffs = [];
         foreach ($want as $k => $v) {
             $cv = $current[$k] ?? null;
@@ -243,13 +256,13 @@ class ThemeSettingsService
                 $diffs[] = $k . ':' . json_encode($cv) . ' -> ' . json_encode($v);
             }
         }
-        
+
         return implode(', ', array_slice($diffs, 0, 15));
     }
 
     /**
      * Inspect theme settings and return formatted summary
-     * 
+     *
      * @param string $siteSlug Site slug
      * @param string $themeKey Theme key (used for theme resolution if needed)
      * @return string Formatted inspection summary
@@ -267,7 +280,7 @@ class ThemeSettingsService
         $container = $settingsInstance->get('theme_settings', []);
         $containerInfo = 'N/A';
         $containerCount = 0;
-        
+
         if (is_array($container)) {
             if (isset($container[$themeSlug]) && is_array($container[$themeSlug])) {
                 $containerCount = count($container[$themeSlug]);
@@ -277,9 +290,9 @@ class ThemeSettingsService
                 $containerInfo = 'flat';
             }
         }
-        
+
         $sampleKeys = is_array($namespaced) ? implode(', ', array_slice(array_keys($namespaced), 0, 15)) : 'N/A';
-        
+
         return sprintf(
             'Inspect: %s has %d keys; theme_settings (%s) has %d keys. Sample (namespaced): %s',
             $namespacedKey,
@@ -292,7 +305,7 @@ class ThemeSettingsService
 
     /**
      * Verify stored defaults against current settings
-     * 
+     *
      * @param string $siteSlug Site slug
      * @param string $preset Preset name to verify against
      * @return string Formatted verification report
@@ -310,13 +323,13 @@ class ThemeSettingsService
         $missingInDefaults = [];
         $missingInSettings = [];
         $diffs = [];
-        
+
         foreach ($namespaced as $k => $v) {
             if (!array_key_exists($k, $defaults)) {
                 $missingInDefaults[] = $k;
             }
         }
-        
+
         foreach ($defaults as $k => $v) {
             if (!array_key_exists($k, $namespaced)) {
                 $missingInSettings[] = $k;
@@ -324,7 +337,7 @@ class ThemeSettingsService
                 $diffs[] = $k . ':' . json_encode($namespaced[$k]) . ' != ' . json_encode($v);
             }
         }
-        
+
         return sprintf(
             'Verify: settings=%d, defaults=%d, missingInDefaults=%d, missingInSettings=%d, diffs=%d. Samples: missingInDefaults=[%s]; missingInSettings=[%s]; diffs=[%s]',
             count($namespaced),
@@ -340,7 +353,7 @@ class ThemeSettingsService
 
     /**
      * Resolve site entity from slug
-     * 
+     *
      * @param string|null $siteSlug Site slug or null
      * @return mixed Site entity or null
      * @throws \RuntimeException If site cannot be found

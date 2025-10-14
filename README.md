@@ -115,15 +115,17 @@ To enable the custom PDF viewer functionality:
 1. **Download PDF.js**
    ```bash
    # Download the latest stable release from Mozilla
-   wget https://github.com/mozilla/pdf.js/releases/download/v4.0.379/pdfjs-4.0.379-dist.zip
+   wget https://github.com/mozilla/pdf.js/releases/download/v5.4.296/pdfjs-5.4.296-dist.zip
    ```
 
 2. **Extract to theme assets**
    ```bash
    # Extract to the theme's asset directory
    cd /path/to/library-theme/asset/
-   unzip pdfjs-4.0.379-dist.zip
-   mv pdfjs-4.0.379-dist pdfjs
+   unzip pdfjs-5.4.296-dist.zip
+   # Note: The zip extracts files directly, so organize them into pdfjs directory
+   mkdir pdfjs
+   mv build web LICENSE pdfjs/
    ```
 
 3. **Verify installation**

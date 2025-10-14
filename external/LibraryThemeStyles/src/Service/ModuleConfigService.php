@@ -5,7 +5,7 @@ namespace LibraryThemeStyles\Service;
 use Omeka\Api\Manager as ApiManager;
 use Omeka\Settings\Settings;
 use Omeka\Settings\SiteSettings;
-use Laminas\Mvc\Controller\Plugin\Messenger;
+use Omeka\Mvc\Controller\Plugin\Messenger;
 
 /**
  * Service for handling module configuration form operations

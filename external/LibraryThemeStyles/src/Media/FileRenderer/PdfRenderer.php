@@ -69,9 +69,11 @@ class PdfRenderer implements RendererInterface
             $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
             $isFirefox = strpos($userAgent, 'Firefox') !== false;
 
-            // Enhanced debug output
-            $debugOutput .= "<!-- PDF RENDERER DEBUG: userAgent='" . $userAgent . "', isFirefox=" . ($isFirefox ? 'TRUE' : 'FALSE') . " -->\n";
-            $debugOutput .= "<!-- PDF RENDERER CONDITION: hideDownloads(" . ($hideDownloads ? 'T' : 'F') . ") && useCustomPdfjs(" . ($useCustomPdfjs ? 'T' : 'F') . ") = " . (($hideDownloads && $useCustomPdfjs) ? 'TRUE' : 'FALSE') . " -->\n";
+            // Enhanced debug output (only in debug mode)
+            if (getenv('APP_DEBUG') === 'true') {
+                $debugOutput .= "<!-- PDF RENDERER DEBUG: userAgent='" . $userAgent . "', isFirefox=" . ($isFirefox ? 'TRUE' : 'FALSE') . " -->\n";
+                $debugOutput .= "<!-- PDF RENDERER CONDITION: hideDownloads(" . ($hideDownloads ? 'T' : 'F') . ") && useCustomPdfjs(" . ($useCustomPdfjs ? 'T' : 'F') . ") = " . (($hideDownloads && $useCustomPdfjs) ? 'TRUE' : 'FALSE') . " -->\n";
+            }
 
             if ($hideDownloads && $useCustomPdfjs) {
                 $viewerUrl = $view->assetUrl('pdf-custom-viewer.html') . '?file=' . rawurlencode($media->originalUrl()) . '&hideDownloads=1';
