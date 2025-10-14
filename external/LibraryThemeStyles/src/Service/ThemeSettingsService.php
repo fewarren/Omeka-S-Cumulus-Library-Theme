@@ -419,13 +419,21 @@ class ThemeSettingsService
      */
     private function getThemeSlug($site = null, ?string $themeKey = null, $settingsInstance = null): string
     {
-        // Validate themeKey if provided
-        if ($themeKey !== null && !$this->errorHandler->validateAndLog(
-            $themeKey,
-            fn($key) => is_string($key) && !empty($key),
-            'Invalid theme key provided'
-        )) {
-            $themeKey = null; // Fall back to default
+        // Validate themeKey if provided with strict pattern matching
+        if ($themeKey !== null) {
+            $themeKey = trim($themeKey);
+
+            // Validate: only letters, numbers, spaces, hyphens, underscores allowed
+            if (!$this->errorHandler->validateAndLog(
+                $themeKey,
+                fn($key) => is_string($key) && !empty($key) && preg_match('/^[a-zA-Z0-9\s\-_]+$/', $key),
+                'Invalid theme key provided: contains disallowed characters'
+            )) {
+                $this->errorHandler->logWarning('Theme key rejected due to invalid characters', [
+                    'themeKey' => $themeKey,
+                ]);
+                $themeKey = null; // Fall back to default
+            }
         }
 
         // First try to get theme from site
@@ -439,7 +447,7 @@ class ThemeSettingsService
 
         // If themeKey is provided and looks like a theme slug, use it
         if ($themeKey && $themeKey !== 'LibraryTheme') {
-            $themeSlug = strtolower(str_replace(' ', '-', $themeKey));
+            $themeSlug = $this->sanitizeThemeSlug($themeKey);
             $this->errorHandler->logDebug('Theme slug resolved from themeKey', [
                 'themeKey' => $themeKey,
                 'themeSlug' => $themeSlug,
@@ -460,6 +468,44 @@ class ThemeSettingsService
 
         // Default fallback
         return 'library-theme';
+    }
+
+    /**
+     * Sanitize theme key into a valid slug
+     *
+     * Normalizes input by:
+     * - Trimming whitespace
+     * - Converting to lowercase
+     * - Replacing sequences of non-alphanumeric characters with single hyphen
+     * - Collapsing multiple hyphens
+     * - Trimming leading/trailing hyphens
+     *
+     * @param string $themeKey Theme key to sanitize
+     * @return string Sanitized theme slug
+     */
+    private function sanitizeThemeSlug(string $themeKey): string
+    {
+        // Trim whitespace
+        $slug = trim($themeKey);
+
+        // Convert to lowercase
+        $slug = strtolower($slug);
+
+        // Replace any sequence of non-alphanumeric characters with a single hyphen
+        $slug = preg_replace('/[^a-z0-9]+/', '-', $slug);
+
+        // Collapse multiple hyphens into single hyphen
+        $slug = preg_replace('/-+/', '-', $slug);
+
+        // Trim leading and trailing hyphens
+        $slug = trim($slug, '-');
+
+        $this->errorHandler->logDebug('Theme slug sanitized', [
+            'original' => $themeKey,
+            'sanitized' => $slug,
+        ]);
+
+        return $slug;
     }
 
     /**
