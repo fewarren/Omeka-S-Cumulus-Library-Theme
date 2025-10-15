@@ -1,0 +1,106 @@
+<?php
+namespace LibraryThemeStyles\Media\FileRenderer;
+
+use Omeka\Api\Representation\MediaRepresentation;
+use Omeka\Media\FileRenderer\RendererInterface;
+use Laminas\View\Renderer\PhpRenderer;
+
+/**
+ * PDF File Renderer
+ * Embeds PDF files in an iframe or object tag for immediate viewing
+ */
+class PdfRenderer implements RendererInterface
+{
+    const DEFAULT_OPTIONS = [
+        'width' => '100%',
+        'height' => '800px',
+        'embed_type' => 'iframe', // 'iframe' or 'object'
+    ];
+
+    public function render(PhpRenderer $view, MediaRepresentation $media, array $options = [])
+    {
+        $options = array_merge(self::DEFAULT_OPTIONS, $options);
+        $escape = $view->plugin('escapeHtml');
+        $escapeAttr = $view->plugin('escapeHtmlAttr');
+
+        // Check if downloads should be hidden
+        $hideDownloads = $view->plugin('themeSetting')('hide_download_links', '0') === '1';
+        $useCustomPdfjs = $view->plugin('themeSetting')('use_custom_pdfjs_viewer', '0') === '1';
+        $toolbarParam = $hideDownloads ? '#toolbar=0' : '';
+
+        $pdfUrl = $media->originalUrl() . $toolbarParam;
+
+        // DEBUG: PDF renderer download control logic
+        $debugOutput = "\n<!-- DEBUG PDF RENDERER: hide_download_links='" . $view->plugin('themeSetting')('hide_download_links', '0') .
+                      "', use_custom_pdfjs_viewer='" . $view->plugin('themeSetting')('use_custom_pdfjs_viewer', '0') .
+                      "', hideDownloads=" . ($hideDownloads ? 'TRUE' : 'FALSE') .
+                      ", toolbarParam='" . $toolbarParam .
+                      "', originalUrl='" . $media->originalUrl() .
+                      "', finalPdfUrl='" . $pdfUrl . "' -->\n";
+        $title = $media->displayTitle() ?: $media->filename();
+        
+        $width = $escapeAttr($options['width']);
+        $height = $escapeAttr($options['height']);
+        
+        if ($options['embed_type'] === 'object') {
+            // Use object tag (better for some browsers)
+            $fallbackMessage = $hideDownloads
+                ? $escape($view->translate('Your browser does not support embedded PDFs.'))
+                : $escape($view->translate('Your browser does not support embedded PDFs. Please')) . ' <a href="' . $escapeAttr($media->originalUrl()) . '">' . $escape($view->translate('download the PDF to view it')) . '</a>';
+
+            return $debugOutput . sprintf(
+                '<div class="pdf-viewer-container" style="width: %s; height: %s;">
+    <object data="%s" type="application/pdf" width="100%%" height="100%%">
+        <p>%s</p>
+    </object>
+</div>',
+                $width,
+                $height,
+                $escapeAttr($pdfUrl),
+                $fallbackMessage
+            );
+        } else {
+            // Use iframe (default, works in most modern browsers)
+            $fallbackMessage = $hideDownloads
+                ? $escape($view->translate('Your browser does not support embedded PDFs.'))
+                : $escape($view->translate('Your browser does not support embedded PDFs. Please')) . ' <a href="' . $escapeAttr($media->originalUrl()) . '">' . $escape($view->translate('download the PDF to view it')) . '</a>';
+
+            // Use native or custom viewer based on settings
+            $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
+            $isFirefox = strpos($userAgent, 'Firefox') !== false;
+
+            // Enhanced debug output (only in debug mode)
+            if (getenv('APP_DEBUG') === 'true') {
+                $debugOutput .= "<!-- PDF RENDERER DEBUG: userAgent='" . $userAgent . "', isFirefox=" . ($isFirefox ? 'TRUE' : 'FALSE') . " -->\n";
+                $debugOutput .= "<!-- PDF RENDERER CONDITION: hideDownloads(" . ($hideDownloads ? 'T' : 'F') . ") && useCustomPdfjs(" . ($useCustomPdfjs ? 'T' : 'F') . ") = " . (($hideDownloads && $useCustomPdfjs) ? 'TRUE' : 'FALSE') . " -->\n";
+            }
+
+            if ($hideDownloads && $useCustomPdfjs) {
+                $viewerUrl = $view->assetUrl('pdf-custom-viewer.html') . '?file=' . rawurlencode($media->originalUrl()) . '&hideDownloads=1';
+                return $debugOutput . sprintf(
+                    '<div class="pdf-viewer-container" style="width: %s; height: %s;">
+    <iframe src="%s" width="100%%" height="100%%" style="border: none;" title="%s"></iframe>
+</div>',
+                    $width,
+                    $height,
+                    $escapeAttr($viewerUrl),
+                    $escapeAttr($title)
+                );
+            }
+
+            return $debugOutput . sprintf(
+                '<div class="pdf-viewer-container" style="width: %s; height: %s;">
+    <iframe src="%s" width="100%%" height="100%%" style="border: none;" title="%s">
+        <p>%s</p>
+    </iframe>
+</div>',
+                $width,
+                $height,
+                $escapeAttr($pdfUrl),
+                $escapeAttr($title),
+                $fallbackMessage
+            );
+        }
+    }
+}
+
