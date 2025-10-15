@@ -1,0 +1,90 @@
+<?php
+/**
+ * LibraryTheme override for resource page block: media-embeds
+ *
+ * Goal: Display a scalable image that respects the user-chosen thumbnail hierarchy
+ * and avoids embedding heavy viewers on resource pages.
+ *
+ * Priority: item thumbnail > media thumbnail > generated thumbnail.
+ */
+$thumbnailHelper = $this->plugin('thumbnail');
+$escape = $this->plugin('escapeHtml');
+$resourceMedia = $resource->media();
+?>
+<?php if ($resourceMedia): ?>
+<div class="media-embeds">
+    <?php foreach ($resourceMedia as $media): ?>
+    <div class="media-embed-item">
+        <?php
+        // Choose representation to thumbnail: prefer item if it has a custom thumbnail, else the media
+        $preferredRep = $resource->thumbnail() ? $resource : ($media->thumbnail() ? $media : $media);
+        // Use medium by default to avoid overly large thumbnails; no size option is provided by this block
+        $img = $thumbnailHelper($preferredRep, 'medium', [
+            'class' => 'media-embed-thumbnail',
+            'style' => 'max-width: 100%; height: auto;',
+        ]);
+        echo "\n<!-- DEBUG LT media-embeds.phtml: chosen=" . (($preferredRep === $resource) ? 'item' : 'media') . " -->\n";
+        ?>
+        <?php
+            $mediaType = method_exists($media, 'mediaType') ? (string) $media->mediaType() : '';
+            $isImage = (stripos($mediaType, 'image/') === 0);
+            $isAudio = (stripos($mediaType, 'audio/') === 0);
+
+            echo "\n<!-- DEBUG LT media-embeds.phtml: mediaType=" . $mediaType . ", isImage=" . ($isImage ? 'YES' : 'NO') . ", isAudio=" . ($isAudio ? 'YES' : 'NO') . " -->\n";
+
+            if ($isImage && $media->hasOriginal()) {
+                // Images: Open in lightbox
+                $linkUrl = $media->originalUrl();
+                $linkClass = 'media-embed-link lightbox-trigger';
+                $dataAttrs = ' data-lightbox="media-embeds" data-title="' . $escape($media->displayTitle() ?: $resource->displayTitle()) . '"';
+                if (getenv('APP_DEBUG') === 'true') {
+                    echo "\n<!-- DEBUG LT media-embeds.phtml: IMAGE → lightbox, linkUrl=" . $linkUrl . " -->\n";
+                }
+        ?>
+        <a href="<?= $escape($linkUrl) ?>"
+           class="<?= $escape($linkClass) ?>"<?= $dataAttrs ?>
+           title="<?= $escape($media->displayTitle() ?: $resource->displayTitle()) ?>">
+            <?= $img ?>
+        </a>
+        <?php
+            } elseif ($isAudio && $media->hasOriginal()) {
+                // Audio: Render player inline (no navigation)
+                echo "\n<!-- DEBUG LT media-embeds.phtml: AUDIO → inline player -->\n";
+        ?>
+        <div class="media-embed-audio-container" style="margin-bottom: 20px;">
+            <?= $img ?>
+            <div class="audio-player-wrapper" style="margin-top: 10px;">
+                <?php
+                $hideDownloads = $this->themeSetting('hide_download_links', '0') === '1';
+                $audioOptions = ['controls' => true, 'preload' => 'metadata'];
+                if ($hideDownloads) {
+                    $audioOptions['controlsList'] = 'nodownload';
+                }
+                ?>
+                <?= $media->render($audioOptions) ?>
+            </div>
+        </div>
+        <?php
+            } else {
+                // PDF, Video, and other types: Link to media page
+                $linkUrl = $media->url();
+                $linkClass = 'media-embed-link';
+                $dataAttrs = '';
+                if (getenv('APP_DEBUG') === 'true') {
+                    echo "\n<!-- DEBUG LT media-embeds.phtml: PDF/VIDEO/OTHER → media page, linkUrl=" . $linkUrl . " -->\n";
+                }
+        ?>
+        <a href="<?= $escape($linkUrl) ?>"
+           class="<?= $escape($linkClass) ?>"<?= $dataAttrs ?>
+           title="<?= $escape($media->displayTitle() ?: $resource->displayTitle()) ?>">
+            <?= $img ?>
+        </a>
+        <?php
+            }
+        ?>
+    </div>
+    <?php endforeach; ?>
+
+
+</div>
+<?php endif; ?>

@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>PDF Viewer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    html, body { height: 100%; margin: 0; }
+    .container { position: fixed; inset: 0; }
+    iframe { width: 100%; height: 100%; border: 0; }
+    .warning { position: absolute; top: 8px; left: 8px; background: #ffc; color: #333; padding: 6px 10px; border: 1px solid #cc9; border-radius: 4px; font: 13px/1.4 Arial, sans-serif; }
+    .warning a { color: #0645ad; text-decoration: none; }
+
+    /* CRITICAL FIX: CSS-only approach to hide PDF.js toolbar */
+    .pdf-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 32px;
+      background: #f2f2f2;
+      z-index: 9999;
+      border-bottom: 1px solid #d9d9d9;
+      pointer-events: none;
+    }
+
+    .pdf-overlay.hide-downloads {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="warn" class="warning" style="display:none"></div>
+    <div id="pdf-overlay" class="pdf-overlay" style="display:none"></div>
+    <iframe id="viewer" src="about:blank" allowfullscreen></iframe>
+  </div>
+  <script>
+    (function(){
+      function getParam(name){
+        const m = new URLSearchParams(window.location.search).get(name);
+        return m === null ? '' : m;
+      }
+      const file = getParam('file');
+      const hideDownloads = getParam('hideDownloads') === '1';
+      const base = (document.currentScript && document.currentScript.src) ? new URL(document.currentScript.src).pathname : window.location.pathname;
+      // Resolve viewer path relative to this file: asset/pdfjs/web/viewer.html
+      var viewerPath = base.replace(/\/pdf-custom-viewer\.html$/, '/pdfjs/web/viewer.html');
+      if (viewerPath === base) { viewerPath = 'pdfjs/web/viewer.html'; }
+
+      const iframe = document.getElementById('viewer');
+      const warn = document.getElementById('warn');
+      const overlay = document.getElementById('pdf-overlay');
+
+      // Enhanced debugging
+      console.log('[PDF Custom Viewer] Starting initialization...');
+      console.log('[PDF Custom Viewer] Parameters:', { file, hideDownloads, viewerPath });
+
+      if (!file) {
+        warn.style.display = 'block';
+        warn.innerHTML = 'Missing file parameter.';
+        console.error('[PDF Custom Viewer] No file parameter provided');
+        return;
+      }
+
+      // Build pdf.js viewer URL (without problematic parameters)
+      const viewerUrl = viewerPath + '?file=' + encodeURIComponent(file);
+      console.log('[PDF Custom Viewer] Loading PDF.js viewer:', viewerUrl);
+      iframe.src = viewerUrl;
+
+      // SIMPLE FIX: Show overlay to hide toolbar if downloads should be hidden
+      if (hideDownloads) {
+        iframe.addEventListener('load', function() {
+          console.log('[PDF Custom Viewer] PDF loaded, showing toolbar overlay');
+          overlay.style.display = 'block';
+        });
+      }
+
+      // Removed complex iframe access code that was causing cross-origin issues
+      console.log('[PDF Custom Viewer] Using CSS overlay approach instead of iframe manipulation');
+
+    })();
+  </script>
+
+  <!-- Detect if pdf.js viewer is missing and provide guidance -->
+  <script>
+    setTimeout(function(){
+      const iframe = document.getElementById('viewer');
+      const warn = document.getElementById('warn');
+      if (!iframe.contentDocument || iframe.contentDocument.location.href === 'about:blank') {
+        warn.style.display = 'block';
+        warn.innerHTML = 'PDF.js viewer not found. Place pdf.js distribution under <code>asset/pdfjs/</code> so that <code>asset/pdfjs/web/viewer.html</code> exists.';
+      }
+    }, 1500);
+  </script>
+</body>
+</html>
+

@@ -1,0 +1,21 @@
+# Configure Apache to process .phtml files as PHP
+<FilesMatch "\.phtml$">
+    SetHandler application/x-httpd-php
+</FilesMatch>
+
+# Alternative method - add .phtml to PHP MIME type
+AddType application/x-httpd-php .phtml
+
+# Ensure PHP module is enabled for .phtml files
+<IfModule mod_php.c>
+    <FilesMatch "\.phtml$">
+        SetHandler application/x-httpd-php
+    </FilesMatch>
+</IfModule>
+
+# For PHP-FPM (if using FPM instead of mod_php)
+<IfModule mod_proxy_fcgi.c>
+    <FilesMatch "\.phtml$">
+        SetHandler "proxy:unix:/var/run/php/php8.3-fpm.sock|fcgi://localhost"
+    </FilesMatch>
+</IfModule>

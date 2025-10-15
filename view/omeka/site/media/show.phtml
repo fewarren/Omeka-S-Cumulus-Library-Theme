@@ -1,0 +1,222 @@
+<?php
+$translate = $this->plugin('translate');
+$showLayout = $this->themeSetting('show_layout');
+$tabLayout = ($this->themeSetting('tab_navigation_layout')) ? $this->themeSetting('tab_navigation_layout') : 'vertical';
+$tabContent = ($this->themeSetting('tab_navigation_content')) ? $this->themeSetting('tab_navigation_content') : 'main';
+$this->headLink()->appendStylesheet($this->assetUrl('css/resource-page-blocks.css'));
+$fullWidthMainBlockContent = $this->resourcePageBlocks($media, 'full_width_main');
+$fullWidthMainHasBlocks = $fullWidthMainBlockContent->hasBlocks();
+$mainWithSidebarBlockContent = $this->resourcePageBlocks($media);
+$mainWithSidebarHasBlocks= $mainWithSidebarBlockContent->hasBlocks();
+$leftSidebarBlockContent = $this->resourcePageBlocks($media, 'left');
+$leftSidebarHasBlocks = $leftSidebarBlockContent->hasBlocks();
+$rightSidebarBlockContent = $this->resourcePageBlocks($media, 'right');
+$rightSidebarHasBlocks = $rightSidebarBlockContent->hasBlocks();
+
+$tabManager = null;
+try {
+    $tabManager = $this->TabManager();
+} catch (\Throwable $e) {
+    $tabManager = null;
+}
+$tabNavigationRegion = $tabManager ? $tabManager->getTabNavigationRegion($media) : null;
+
+$filterLocale = (bool) $this->siteSetting('filter_locale_values');
+$lang = $this->lang();
+$valueLang = $filterLocale ? [$lang, ''] : null;
+?>
+<?php $this->htmlElement('body')->appendAttribute('class', 'media resource show'); ?>
+
+<div class="resource-title">
+<?php echo $this->pageTitle($media->displayTitle(null, $valueLang), 2); ?>
+<h3 class="label"><?php echo $translate('Media'); ?></h3>
+</div>
+
+<div class="<?php echo ($showLayout == 'inline') ? 'inline' : 'stack'; ?>">
+    <?php $this->trigger('view.show.before'); ?>
+    <?php
+        // Smart media rendering: detect type and embed appropriate viewer/player
+        if (isset($media) && method_exists($media, 'mediaType')) {
+            $mediaType = (string) $media->mediaType();
+            $escape = $this->plugin('escapeHtml');
+            $escapeAttr = $this->plugin('escapeHtmlAttr');
+
+            $hasOriginal = $media->hasOriginal();
+            $isPDF = (stripos($mediaType, 'pdf') !== false);
+            $isAudio = (stripos($mediaType, 'audio/') === 0);
+            $isVideo = (stripos($mediaType, 'video/') === 0);
+
+            if (getenv('APP_DEBUG') === 'true') {
+                echo "\n<!-- DEBUG LT media/show.phtml: MEDIA TYPE DETECTION -->\n";
+                echo "<!-- mediaType=" . htmlspecialchars($mediaType, ENT_QUOTES, 'UTF-8') . " -->\n";
+                echo "<!-- hasOriginal=" . ($hasOriginal ? 'YES' : 'NO') . " -->\n";
+                echo "<!-- isPDF=" . ($isPDF ? 'YES' : 'NO') . " -->\n";
+                echo "<!-- isAudio=" . ($isAudio ? 'YES' : 'NO') . " -->\n";
+                echo "<!-- isVideo=" . ($isVideo ? 'YES' : 'NO') . " -->\n";
+            }
+
+            // PDF: Embed in iframe for immediate viewing
+            if ($isPDF && $hasOriginal) {
+                $hideDownloads = $this->themeSetting('hide_download_links', '0') === '1';
+                $useCustomPdfjs = $this->themeSetting('use_custom_pdfjs_viewer', '0') === '1';
+
+                // Browser detection (best-effort)
+                $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
+                $isFirefox = strpos($userAgent, 'Firefox') !== false;
+                $isChrome = strpos($userAgent, 'Chrome') !== false;
+                $isSafari = strpos($userAgent, 'Safari') !== false && strpos($userAgent, 'Chrome') === false;
+
+                $toolbarParam = $hideDownloads ? '#toolbar=0' : '';
+                $nativePdfUrl = $media->originalUrl() . $toolbarParam;
+
+                // COMPREHENSIVE DEBUG OUTPUT
+                if (getenv('APP_DEBUG') === 'true') {
+                    echo "\n<!-- ===== PDF VIEWER ROUTING DEBUG ===== -->\n";
+                    echo "<!-- Theme Setting 'hide_download_links': '" . htmlspecialchars($this->themeSetting('hide_download_links', 'NOT_SET'), ENT_QUOTES, 'UTF-8') . "' -->\n";
+                    echo "<!-- Theme Setting 'use_custom_pdfjs_viewer': '" . htmlspecialchars($this->themeSetting('use_custom_pdfjs_viewer', 'NOT_SET'), ENT_QUOTES, 'UTF-8') . "' -->\n";
+                    echo "<!-- hideDownloads boolean: " . ($hideDownloads ? 'TRUE' : 'FALSE') . " -->\n";
+                    echo "<!-- useCustomPdfjs boolean: " . ($useCustomPdfjs ? 'TRUE' : 'FALSE') . " -->\n";
+                    echo "<!-- User Agent: '" . htmlspecialchars($userAgent, ENT_QUOTES, 'UTF-8') . "' -->\n";
+                    echo "<!-- isFirefox: " . ($isFirefox ? 'TRUE' : 'FALSE') . " -->\n";
+                    echo "<!-- isChrome: " . ($isChrome ? 'TRUE' : 'FALSE') . " -->\n";
+                    echo "<!-- isSafari: " . ($isSafari ? 'TRUE' : 'FALSE') . " -->\n";
+                    echo "<!-- Condition Check: hideDownloads(" . ($hideDownloads ? 'T' : 'F') . ") && useCustomPdfjs(" . ($useCustomPdfjs ? 'T' : 'F') . ") = " . (($hideDownloads && $useCustomPdfjs) ? 'TRUE' : 'FALSE') . " -->\n";
+                    echo "<!-- ===================================== -->\n";
+                }
+
+                // If hiding downloads AND custom pdf.js viewer enabled, route through custom viewer
+                // (Originally Firefox-only, but expanding to all browsers for better coverage)
+                if ($hideDownloads && $useCustomPdfjs) {
+                    $viewerBase = $this->assetUrl('pdf-custom-viewer.html');
+                    $sep = (strpos($viewerBase, '?') !== false) ? '&' : '?';
+                    $viewerUrl = $viewerBase . $sep . 'file=' . rawurlencode($media->originalUrl()) . '&hideDownloads=1';
+                    if (getenv('APP_DEBUG') === 'true') {
+                        echo "\n<!-- DEBUG PDF ROUTING: using custom pdf.js viewer; base='" . htmlspecialchars($viewerBase, ENT_QUOTES, 'UTF-8') . "', viewerUrl='" . htmlspecialchars($viewerUrl, ENT_QUOTES, 'UTF-8') . "' -->\n";
+                    }
+                    echo sprintf(
+                        '<div class="pdf-viewer-container" style="width: 100%%; height: 800px; margin-bottom: 20px;">
+    <iframe src="%s" width="100%%" height="100%%" style="border: 1px solid #ccc;" title="%s"></iframe>
+</div>',
+                        $escapeAttr($viewerUrl),
+                        $escapeAttr($media->displayTitle() ?: $media->filename())
+                    );
+                } else {
+                    // Default/native embedding
+                    if (getenv('APP_DEBUG') === 'true') {
+                        echo "\n<!-- DEBUG PDF ROUTING: using native viewer; url='" . htmlspecialchars($nativePdfUrl, ENT_QUOTES, 'UTF-8') . "' -->\n";
+                    }
+                    echo sprintf(
+                        '<div class="pdf-viewer-container" style="width: 100%%; height: 800px; margin-bottom: 20px;">
+    <iframe src="%s" width="100%%" height="100%%" style="border: 1px solid #ccc;" title="%s">
+        <p>%s</p>
+    </iframe>
+</div>',
+                        $escapeAttr($nativePdfUrl),
+                        $escapeAttr($media->displayTitle() ?: $media->filename()),
+                        $hideDownloads
+                            ? $escape($this->translate('Your browser does not support embedded PDFs.'))
+                            : $escape($this->translate('Your browser does not support embedded PDFs. Please')) . ' <a href="' . $escapeAttr($media->originalUrl()) . '">' . $escape($this->translate('download the PDF to view it')) . '</a>'
+                    );
+                }
+
+            }
+            // Audio: Ensure HTML5 audio player renders
+            elseif ($isAudio && $hasOriginal) {
+                $hideDownloads = $this->themeSetting('hide_download_links', '0') === '1';
+                $audioOptions = ['controls' => true, 'preload' => 'metadata'];
+
+                // Remove download option if downloads are hidden
+                if ($hideDownloads) {
+                    $audioOptions['controlsList'] = 'nodownload';
+                }
+
+                echo "\n<!-- DEBUG LT media/show.phtml: RENDERING AUDIO PLAYER via media->render() -->\n";
+                $audioOutput = $media->render($audioOptions);
+                echo "<!-- Audio render output length: " . strlen($audioOutput) . " bytes -->\n";
+                echo "<!-- Audio render output preview: " . htmlspecialchars(substr(strip_tags($audioOutput), 0, 100), ENT_QUOTES, 'UTF-8') . "... -->\n";
+                echo $audioOutput;
+                echo "\n<!-- DEBUG LT media/show.phtml: AUDIO PLAYER RENDERED -->\n";
+            }
+            // Video and other types: use standard renderer
+            else {
+                $hideDownloads = $this->themeSetting('hide_download_links', '0') === '1';
+                $renderOptions = [];
+
+                // For video types, add download control
+                if ($isVideo && $hideDownloads) {
+                    $renderOptions['controlsList'] = 'nodownload';
+                }
+
+                echo "\n<!-- DEBUG LT media/show.phtml: RENDERING via standard media->render() -->\n";
+                $renderOutput = $media->render($renderOptions);
+                echo "<!-- Render output length: " . strlen($renderOutput) . " bytes -->\n";
+                echo $renderOutput;
+            }
+        } else {
+            echo "\n<!-- DEBUG LT media/show.phtml: NO MEDIA OR NO mediaType METHOD -->\n";
+        }
+    ?>
+    <?php if ($fullWidthMainHasBlocks): ?>
+    <div class="full-width-main">
+        <?php /* Removed call to non-existent getBlocksArray(); use getBlocks() below */ ?>
+
+        <?php if ($tabManager && $tabNavigationRegion == 'full_width_main'): ?>
+            <?php echo $tabManager->renderTabsOnly($media, $tabContent); ?>
+        <?php endif; ?>
+
+        <?php if ($tabManager && $tabContent == 'full_width_main'): ?>
+            <?php echo $tabManager->renderPanels($media, $tabContent, $tabLayout); ?>
+        <?php else: ?>
+            <?php echo $fullWidthMainBlockContent->getBlocks(); ?>
+        <?php endif; ?>
+    </div>
+    <?php endif; ?>
+
+    <?php if ($mainWithSidebarHasBlocks || $leftSidebarHasBlocks || $rightSidebarHasBlocks): ?>
+
+    <?php
+    if ($leftSidebarHasBlocks && $rightSidebarHasBlocks) {
+        $sidebarWidth = '3';
+        $mainWidth = '6';
+    } else {
+        $sidebarWidth = '4';
+        $mainWidth = '8';
+    }
+    ?>
+    <div class="grid-x grid-margin-x">
+        <?php if ($leftSidebarHasBlocks): ?>
+        <div class="left-sidebar cell medium-<?php echo $sidebarWidth; ?>">
+            <?php if ($tabManager && $tabNavigationRegion == 'left'): ?>
+                <?php echo $tabManager->renderTabsRegion($media, 'left'); ?>
+            <?php else: ?>
+                <?php echo $leftSidebarBlockContent->getBlocks(); ?>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
+
+        <?php if ($mainWithSidebarHasBlocks): ?>
+        <div class="main-with-sidebar cell medium-<?php echo $mainWidth; ?>">
+            <?php if ($tabManager && $tabNavigationRegion == 'main'): ?>
+                <?php echo $tabManager->renderTabsOnly($media, $tabContent, $tabLayout); ?>
+            <?php endif; ?>
+            <?php if ($tabManager && $tabNavigationRegion && ($tabContent == 'main')): ?>
+                <?php echo $tabManager->renderPanels($media, $tabContent, $tabLayout); ?>
+            <?php else: ?>
+                <?php echo $mainWithSidebarBlockContent->getBlocks(); ?>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
+
+        <?php if ($rightSidebarHasBlocks): ?>
+        <div class="right-sidebar cell medium-<?php echo $sidebarWidth; ?>">
+            <?php if ($tabManager && $tabNavigationRegion == 'right'): ?>
+                <?php echo $tabManager->renderTabsRegion($media, 'right', $tabContent, $tabLayout); ?>
+            <?php else: ?>
+                <?php echo $rightSidebarBlockContent->getBlocks(); ?>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
+    </div>
+    <?php endif; ?>
+    <?php $this->trigger('view.show.after'); ?>
+</div>

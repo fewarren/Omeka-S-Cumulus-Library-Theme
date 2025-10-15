@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Carousel Test - LibraryTheme</title>
+    
+    <!-- Load LibraryTheme CSS -->
+    <link rel="stylesheet" href="/omeka-s/themes/LibraryTheme/asset/css/library.css">
+    <link rel="stylesheet" href="/omeka-s/themes/LibraryTheme/asset/css/library-polish.css">
+    <link rel="stylesheet" href="/omeka-s/themes/LibraryTheme/asset/css/library-reoriented-design.css">
+    <link rel="stylesheet" href="/omeka-s/themes/LibraryTheme/asset/css/carousel-fix.css">
+    <link rel="stylesheet" href="/omeka-s/themes/LibraryTheme/asset/css/font-overrides.css">
+
+    <!-- Load Slick Carousel CSS (same as ItemCarouselBlock) -->
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@accessible360/accessible-slick@1.0.1/slick/slick.min.css">
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@accessible360/accessible-slick@1.0.1/slick/slick-theme.min.css">
+    <link rel="stylesheet" href="/omeka-s/modules/ItemCarouselBlock/asset/css/item-carousel.css">
+    
+    <!-- Load jQuery and Slick JS (same as LibraryTheme) -->
+    <script src="/omeka-s/application/asset/vendor/jquery/jquery.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/@accessible360/accessible-slick@1.0.1/slick/slick.min.js"></script>
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-item {
+            text-align: center;
+            padding: 20px;
+        }
+        .test-item img {
+            max-width: 200px;
+            max-height: 150px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+        }
+        .debug-info {
+            background: #f0f0f0;
+            padding: 10px;
+            margin: 20px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Item Carousel Test - LibraryTheme</h1>
+        
+        <div class="debug-info">
+            <strong>Test Purpose:</strong> Verify that LibraryTheme carousel fixes work correctly<br>
+            <strong>Expected:</strong> Carousel should display with navigation arrows and dots<br>
+            <strong>Problem:</strong> Without fix, items display vertically as a list
+        </div>
+        
+        <!-- Simulate ItemCarouselBlock structure -->
+        <div class="carousel-block">
+            <h2>Test Carousel</h2>
+            <div class="carousel-test-123">
+                <div>
+                    <a href="#"><img src="https://via.placeholder.com/200x150/4CAF50/white?text=Item+1" alt="Test Item 1"></a>
+                    <div class="slide-text">
+                        <div class="title"><a href="#">Test Item 1</a></div>
+                        <div class="caption">This is the first test item</div>
+                    </div>
+                </div>
+                <div>
+                    <a href="#"><img src="https://via.placeholder.com/200x150/2196F3/white?text=Item+2" alt="Test Item 2"></a>
+                    <div class="slide-text">
+                        <div class="title"><a href="#">Test Item 2</a></div>
+                        <div class="caption">This is the second test item</div>
+                    </div>
+                </div>
+                <div>
+                    <a href="#"><img src="https://via.placeholder.com/200x150/FF9800/white?text=Item+3" alt="Test Item 3"></a>
+                    <div class="slide-text">
+                        <div class="title"><a href="#">Test Item 3</a></div>
+                        <div class="caption">This is the third test item</div>
+                    </div>
+                </div>
+                <div>
+                    <a href="#"><img src="https://via.placeholder.com/200x150/E91E63/white?text=Item+4" alt="Test Item 4"></a>
+                    <div class="slide-text">
+                        <div class="title"><a href="#">Test Item 4</a></div>
+                        <div class="caption">This is the fourth test item</div>
+                    </div>
+                </div>
+                <div>
+                    <a href="#"><img src="https://via.placeholder.com/200x150/9C27B0/white?text=Item+5" alt="Test Item 5"></a>
+                    <div class="slide-text">
+                        <div class="title"><a href="#">Test Item 5</a></div>
+                        <div class="caption">This is the fifth test item</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="debug-info" id="debug-output">
+            <strong>Debug Output:</strong><br>
+            <div id="debug-messages">Loading...</div>
+        </div>
+        
+        <div class="debug-info">
+            <strong>Manual Test:</strong><br>
+            • Check if items display horizontally in a carousel<br>
+            • Verify navigation arrows are present and functional<br>
+            • Confirm pagination dots work<br>
+            • Test auto-advance if enabled<br>
+            • Verify responsive behavior on mobile
+        </div>
+    </div>
+    
+    <!-- Load LibraryTheme JS (carousel-fix.js will handle initialization) -->
+    <script src="/omeka-s/themes/LibraryTheme/asset/js/carousel-fix.js"></script>
+    
+    <script>
+        $(document).ready(function() {
+            var debugMessages = [];
+            
+            function addDebugMessage(message) {
+                debugMessages.push(new Date().toLocaleTimeString() + ': ' + message);
+                $('#debug-messages').html(debugMessages.join('<br>'));
+            }
+            
+            addDebugMessage('Test page loaded');
+            addDebugMessage('jQuery version: ' + ($.fn.jquery || 'not available'));
+            addDebugMessage('Slick available: ' + (typeof $.fn.slick !== 'undefined'));
+
+            // Check initial DOM structure before any initialization
+            var $carousel = $('.carousel-test-123');
+            addDebugMessage('Initial DOM check:');
+            addDebugMessage('  - Carousel found: ' + ($carousel.length > 0));
+            addDebugMessage('  - Initial children: ' + $carousel.children().length);
+            addDebugMessage('  - Initial div children: ' + $carousel.children('div').length);
+
+            // Let carousel-fix.js handle initialization, we just monitor
+            addDebugMessage('Waiting for carousel-fix.js to initialize carousel...');
+            
+            // Check carousel status multiple times to monitor progress
+            function checkCarouselStatus(attempt) {
+                var $carousel = $('.carousel-test-123');
+                var isInitialized = $carousel.hasClass('slick-initialized');
+                var slideCount = $carousel.find('.slick-slide').length;
+                var visibleSlides = $carousel.find('.slick-slide:visible').length;
+                var activeSlides = $carousel.find('.slick-slide.slick-active').length;
+                var $track = $carousel.find('.slick-track');
+                var trackTransform = $track.css('transform');
+                var $list = $carousel.find('.slick-list');
+                var listW = $list.width();
+                var trackW = $track.width();
+                var slideW = $carousel.find('.slick-slide').first().width();
+
+                // Check original items before Slick modifies DOM
+                var originalItems = $carousel.children('div').not('.slick-list').length;
+                var slickList = $carousel.find('.slick-list').length;
+                var slickTrack = $carousel.find('.slick-track').length;
+
+                addDebugMessage('Check #' + attempt + ' - Initialized: ' + isInitialized);
+                addDebugMessage('DOM Analysis:');
+                addDebugMessage('  - Direct children: ' + $carousel.children().length);
+                addDebugMessage('  - Div children: ' + $carousel.children('div').length);
+                addDebugMessage('  - Non-slick divs: ' + originalItems);
+                addDebugMessage('  - Slick list: ' + slickList);
+                addDebugMessage('  - Slick track: ' + slickTrack);
+
+                if (isInitialized) {
+                    addDebugMessage('Original items: ' + originalItems);
+                    addDebugMessage('Total slides: ' + slideCount);
+                    addDebugMessage('Visible slides (jQuery): ' + visibleSlides);
+                    addDebugMessage('Active slides (slick-active): ' + activeSlides);
+                    addDebugMessage('Track transform: ' + trackTransform);
+                    addDebugMessage('List/Track/Slide widths: ' + listW + ' / ' + trackW + ' / ' + slideW);
+
+                    // Check for proper functionality
+                    var hasArrows = $carousel.find('.slick-arrow').length > 0;
+                    var hasDots = $carousel.find('.slick-dots').length > 0;
+                    var hasTrack = $carousel.find('.slick-track').length > 0;
+
+                    addDebugMessage('Has arrows: ' + hasArrows);
+                    addDebugMessage('Has dots: ' + hasDots);
+                    addDebugMessage('Has track: ' + hasTrack);
+
+                    // Check if slides show different content
+                    var slideTexts = [];
+                    $carousel.find('.slick-slide .title a').each(function() {
+                        slideTexts.push($(this).text());
+                    });
+                    var uniqueTexts = [...new Set(slideTexts)];
+                    addDebugMessage('Unique slide texts: ' + uniqueTexts.length + ' of ' + slideTexts.length);
+
+                    // Pass criteria: has track, different content, at least 1 active slide
+                    if (hasTrack && uniqueTexts.length > 1 && activeSlides >= 1) {
+                        addDebugMessage('✅ Test PASSED - Carousel structure looks correct');
+                    } else {
+                        addDebugMessage('❌ Test FAILED - Carousel has issues');
+                        if (!hasTrack) addDebugMessage('  - Missing track');
+                        if (uniqueTexts.length <= 1) addDebugMessage('  - All slides show same content');
+                        if (activeSlides < 1) addDebugMessage('  - No active slides detected');
+                    }
+                } else if (attempt < 3) {
+                    // Try again
+                    setTimeout(function() {
+                        checkCarouselStatus(attempt + 1);
+                    }, 1000);
+                } else {
+                    addDebugMessage('❌ Test FAILED - Carousel never initialized');
+                }
+            }
+
+            // Start checking after a delay
+            setTimeout(function() {
+                checkCarouselStatus(1);
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,129 @@
+<?php
+$hyperlink = $this->plugin('hyperlink');
+$thumbnailHelper = $this->plugin('thumbnail');
+// Ensure sensible defaults so the block honors thumbnail sizing when configuration is missing
+$mediaDisplay = isset($mediaDisplay) && $mediaDisplay ? $mediaDisplay : 'thumbnail';
+$thumbnailType = isset($thumbnailType) && $thumbnailType ? $thumbnailType : 'medium';
+?>
+<div class="<?php echo $this->escapeHtml(implode(' ', $classes)); ?>">
+    <?php foreach($attachments as $attachment): ?>
+    <?php $item = $attachment->item(); ?>
+    <div class="item resource">
+        <?php
+        $media = $attachment->media() ?: ($item ? $item->primaryMedia() : null);
+        if ($media):
+            if ($mediaDisplay === 'thumbnail') {
+                // Determine link target
+                switch ($link) {
+                    case 'original':
+                        $url = $media->originalUrl();
+                        break;
+                    case 'item':
+                        $url = $item ? $item->url() : $media->url();
+                        break;
+                    case 'media':
+                        $url = $media->url();
+                        break;
+                    default:
+                        throw new \InvalidArgumentException(sprintf('Invalid link type "%s"', $link));
+                }
+                // Determine per-type link target and attributes
+                $mediaType = method_exists($media, 'mediaType') ? (string) $media->mediaType() : '';
+                $isAudio = (stripos($mediaType, 'audio/') === 0);
+                $linkAttribs = [];
+
+                if (getenv('APP_DEBUG') === 'true') {
+                    echo "\n<!-- DEBUG LT file.phtml: BEFORE type detection - link=" . $link . ", mediaType=" . $mediaType . ", url=" . $url . ", isAudio=" . ($isAudio ? 'YES' : 'NO') . " -->\n";
+                }
+
+                // Prefer item thumbnail, then media thumbnail, then generated
+                $preferredRep = ($item && $item->thumbnail()) ? $item : ($media->thumbnail() ? $media : $media);
+                if (getenv('APP_DEBUG') === 'true') {
+                    echo "\n<!-- DEBUG LT file.phtml: mediaDisplay=" . $mediaDisplay . ", thumbnailType=" . $thumbnailType . ", link=" . $link . ", hasItemThumb=" . (($item && $item->thumbnail()) ? '1' : '0') . ", hasMediaThumb=" . (($media && $media->thumbnail()) ? '1' : '0') . ", chosen=" . (($preferredRep === $item) ? 'item' : 'media') . " -->\n";
+                }
+                $maxWidth = ($thumbnailType === 'square') ? '240px' : (($thumbnailType === 'medium') ? '400px' : '800px');
+
+                if (stripos($mediaType, 'image/') === 0 && $media->hasOriginal()) {
+                    // Images open in a lightbox to the original asset
+                    $url = $media->originalUrl();
+                    $linkAttribs = [
+                        'class' => 'lt-thumb-link lightbox-trigger',
+                        'data-lightbox' => 'file-block',
+                        'data-title' => $media->displayTitle() ?: ($item ? $item->displayTitle() : ''),
+                    ];
+                    if (getenv('APP_DEBUG') === 'true') {
+                        echo "\n<!-- DEBUG LT file.phtml: AFTER type detection - IMAGE → lightbox, url=" . $url . " -->\n";
+                    }
+                    echo $hyperlink->raw($thumbnailHelper($preferredRep, $thumbnailType, [
+                        'class' => 'lt-thumb lt-thumb-' . $thumbnailType,
+                        'style' => 'height:auto; max-width:' . $maxWidth,
+                    ]), $url, $linkAttribs);
+                } elseif ($isAudio && $media->hasOriginal()) {
+                    // Audio: Render player inline (no navigation)
+                    if (getenv('APP_DEBUG') === 'true') {
+                        echo "\n<!-- DEBUG LT file.phtml: AFTER type detection - AUDIO → inline player -->\n";
+                    }
+                    ?>
+                    <div class="file-block-audio-container" style="margin-bottom: 20px;">
+                        <?= $thumbnailHelper($preferredRep, $thumbnailType, [
+                            'class' => 'lt-thumb lt-thumb-' . $thumbnailType,
+                            'style' => 'height:auto; max-width:' . $maxWidth,
+                        ]) ?>
+                        <div class="audio-player-wrapper" style="margin-top: 10px;">
+                            <?php
+                            $hideDownloads = $this->themeSetting('hide_download_links', '0') === '1';
+                            $audioOptions = ['controls' => true, 'preload' => 'metadata'];
+                            if ($hideDownloads) {
+                                $audioOptions['controlsList'] = 'nodownload';
+                            }
+                            ?>
+                            <?= $media->render($audioOptions) ?>
+                        </div>
+                    </div>
+                    <?php
+                } elseif ($link === 'item' && (stripos($mediaType, 'pdf') !== false || stripos($mediaType, 'video/') === 0)) {
+                    // PDF/Video types should route to the media viewer page when editors chose link=item
+                    $url = $media->url();
+                    if (getenv('APP_DEBUG') === 'true') {
+                        echo "\n<!-- DEBUG LT file.phtml: AFTER type detection - PDF/VIDEO + link=item → media page, url=" . $url . " -->\n";
+                    }
+                    echo $hyperlink->raw($thumbnailHelper($preferredRep, $thumbnailType, [
+                        'class' => 'lt-thumb lt-thumb-' . $thumbnailType,
+                        'style' => 'height:auto; max-width:' . $maxWidth,
+                    ]), $url, $linkAttribs);
+                } else {
+                    if (getenv('APP_DEBUG') === 'true') {
+                        echo "\n<!-- DEBUG LT file.phtml: AFTER type detection - NO OVERRIDE, keeping url=" . $url . " -->\n";
+                    }
+                    echo $hyperlink->raw($thumbnailHelper($preferredRep, $thumbnailType, [
+                        'class' => 'lt-thumb lt-thumb-' . $thumbnailType,
+                        'style' => 'height:auto; max-width:' . $maxWidth,
+                    ]), $url, $linkAttribs);
+                }
+            } else {
+                // Fallback to renderer (viewers), when not using thumbnails
+                if (getenv('APP_DEBUG') === 'true') {
+                    echo "\n<!-- DEBUG LT file.phtml: mediaDisplay=" . $mediaDisplay . " using media->render() (no thumbnails path) -->\n";
+                }
+                echo $media->render([
+                    'thumbnailType' => $thumbnailType,
+                    'link' => $link,
+                ]);
+            }
+        endif;
+        ?>
+        <?php if ($showTitleOption === 'item_title' && $item): ?>
+        <h3><?php echo $item->link($item->displayTitle()); ?></h3>
+        <?php elseif ($showTitleOption === 'file_name' && $media): ?>
+        <h3><?php echo $media->displayTitle(); ?></h3>
+        <?php endif; ?>
+        <?php $caption = $attachment->caption(); ?>
+        <?php if ($caption): ?>
+        <div class="caption"><?php echo $caption; ?></div>
+        <?php endif; ?>
+    </div>
+    <?php endforeach; ?>
+</div>
+
+
+

@@ -1,0 +1,234 @@
+/**
+ * Item Carousel Block Fix for LibraryTheme
+ *
+ * Fixes compatibility issues between LibraryTheme CSS and the ItemCarouselBlock module
+ * that uses Slick Carousel. The issue is that LibraryTheme's CSS may be interfering
+ * with the carousel's display properties and JavaScript functionality.
+ *
+ * IMPORTANT: This CSS uses maximum specificity to override any conflicting styles.
+ */
+
+/* Ensure carousel container has proper display properties - Maximum specificity */
+body .carousel-block,
+html body .carousel-block {
+    position: relative !important;
+    padding-bottom: 25px !important;
+    margin: 1rem 0 !important;
+    overflow: visible !important;
+    display: block !important;
+}
+
+/* Fix Slick carousel display issues - Maximum specificity */
+body .carousel-block .slick-slider,
+html body .carousel-block .slick-slider {
+    position: relative !important;
+    display: block !important;
+    box-sizing: border-box !important;
+    padding: 0 2rem !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+body .carousel-block .slick-list,
+html body .carousel-block .slick-list {
+    position: relative !important;
+    display: block !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+body .carousel-block .slick-track,
+html body .carousel-block .slick-track {
+    position: relative !important;
+    top: 0 !important;
+    left: 0 !important;
+    /* DO NOT override display - Slick needs to control this for proper slide layout */
+    /* DO NOT override transform - Slick needs to control this for sliding */
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+body .carousel-block .slick-slide,
+html body .carousel-block .slick-slide {
+    position: relative !important;
+    /* DO NOT override display - Slick needs to control this for proper slide width */
+    height: auto !important;
+    min-height: 1px !important;
+    text-align: center !important;
+    line-height: 1 !important;
+    outline: none !important;
+    padding: 0 10px !important;
+    box-sizing: border-box !important;
+    /* DO NOT override float; Slick uses float: left to lay out slides */
+}
+
+/* Let Slick control slide display for proper width calculations */
+/* Removed display overrides to allow Slick to manage slide layout */
+
+/* Fix slide content display */
+body .carousel-block .slick-slide > div,
+html body .carousel-block .slick-slide > div {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+body .carousel-block .slick-slide img,
+html body .carousel-block .slick-slide img {
+    display: block !important;
+    max-width: 100% !important;
+    max-height: 75vh !important;
+    margin: auto !important;
+    object-fit: contain !important;
+}
+
+body .carousel-block .slick-slide .slide-text,
+html body .carousel-block .slick-slide .slide-text {
+    display: block !important;
+    max-width: 100% !important;
+    padding: 10px !important;
+    margin: 0 !important;
+}
+
+/* Navigation arrows */
+body .carousel-block .slick-prev,
+html body .carousel-block .slick-prev,
+body .carousel-block .slick-next,
+html body .carousel-block .slick-next {
+    position: absolute !important;
+    top: 50% !important;
+    display: block !important;
+    width: 20px !important;
+    height: 20px !important;
+    padding: 0 !important;
+    transform: translateY(-50%) !important;
+    cursor: pointer !important;
+    color: transparent !important;
+    border: none !important;
+    outline: none !important;
+    background: transparent !important;
+    z-index: 1 !important;
+}
+
+body .carousel-block .slick-prev,
+html body .carousel-block .slick-prev {
+    left: 0.5rem !important;
+}
+
+body .carousel-block .slick-next,
+html body .carousel-block .slick-next {
+    right: 0.5rem !important;
+}
+
+/* Dots navigation */
+body .carousel-block .slick-dots,
+html body .carousel-block .slick-dots {
+    position: absolute !important;
+    bottom: -25px !important;
+    display: block !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    list-style: none !important;
+    text-align: center !important;
+}
+
+body .carousel-block .slick-dots li,
+html body .carousel-block .slick-dots li {
+    position: relative !important;
+    display: inline-block !important;
+    width: 20px !important;
+    height: 20px !important;
+    margin: 0 5px !important;
+    padding: 0 !important;
+    cursor: pointer !important;
+}
+
+body .carousel-block .slick-dots li button,
+html body .carousel-block .slick-dots li button {
+    font-size: 0 !important;
+    line-height: 0 !important;
+    display: block !important;
+    width: 20px !important;
+    height: 20px !important;
+    padding: 5px !important;
+    cursor: pointer !important;
+    color: transparent !important;
+    border: 0 !important;
+    outline: none !important;
+    background: transparent !important;
+}
+
+/* Ensure carousel is visible and functional */
+.carousel-block .slick-slider {
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Fix any potential z-index issues */
+.carousel-block {
+    z-index: 1 !important;
+}
+
+body .carousel-block .slick-slider,
+html body .carousel-block .slick-slider {
+    z-index: 1 !important;
+}
+
+/* Responsive fixes */
+@media (max-width: 768px) {
+    body .carousel-block .slick-slider,
+    html body .carousel-block .slick-slider {
+        padding: 0 1rem !important;
+    }
+
+    body .carousel-block .slick-prev,
+    html body .carousel-block .slick-prev {
+        left: 0.25rem !important;
+    }
+
+    body .carousel-block .slick-next,
+    html body .carousel-block .slick-next {
+        right: 0.25rem !important;
+    }
+}
+
+/* Additional fixes for LibraryTheme compatibility */
+.carousel-block * {
+    box-sizing: border-box !important;
+}
+
+/* Ensure carousel doesn't inherit problematic styles */
+.carousel-block,
+.carousel-block * {
+    font-family: inherit !important;
+}
+
+/* Fix any potential flexbox conflicts - but let Slick control display */
+body .carousel-block .slick-track .slick-slide,
+html body .carousel-block .slick-track .slick-slide {
+    /* DO NOT override display - Slick needs to control this for proper slide width */
+    height: auto !important;
+    justify-content: center !important;
+    word-wrap: break-word !important;
+    align-items: center !important;
+}
+
+/* Ensure proper loading state */
+body .carousel-block .slick-loading .slick-track,
+html body .carousel-block .slick-loading .slick-track,
+body .carousel-block .slick-loading .slick-slide,
+html body .carousel-block .slick-loading .slick-slide {
+    visibility: hidden !important;
+}
+
+body .carousel-block .slick-initialized .slick-track,
+html body .carousel-block .slick-initialized .slick-track,
+body .carousel-block .slick-initialized .slick-slide,
+html body .carousel-block .slick-initialized .slick-slide {
+    visibility: visible !important;
+}
